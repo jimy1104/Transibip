@@ -906,7 +906,7 @@ function saveSettings() {
     saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
   }
 }
-// === ENVIAR PESO - CORREGIDO ===
+// === COPIA ESTA FUNCIÓN EXACTA Y REEMPLAZA LA TUYA ===
 function enviarPeso() {
   var peso = parseFloat(document.getElementById('pesoInput').value);
   if (!peso || peso <= 0) {
@@ -916,27 +916,17 @@ function enviarPeso() {
   
   if (connMode === 'bt' && bleRxChar) {
     var data = "PESO=" + peso;
-    console.log("Intentando enviar:", data);
-    
-    try {
     var buffer = new ArrayBuffer(data.length);
-  var view = new Uint8Array(buffer);
-  for(var i=0; i<data.length; i++) view[i] = data.charCodeAt(i);
-  bleRxChar.writeValue(buffer).then(function() {
-        console.log("✓ Escritura exitosa");
-        alert('✓ Enviado: ' + peso + ' kg');
-      }).catch(function(e) {
-        console.error("Error writeValue:", e);
-        alert('Error al enviar: ' + e.message);
-      });
-      
-    } catch(e) {
-      console.error("Error try:", e);
+    var view = new Uint8Array(buffer);
+    for(var i=0; i<data.length; i++) view[i] = data.charCodeAt(i);
+    
+    bleRxChar.writeValue(buffer).then(function() {
+      alert('✓ Enviado: ' + peso + ' kg\n\nRevisa el ESP32');
+    }).catch(function(e) {
       alert('Error: ' + e.message);
-    }
+    });
   } else {
-    console.log("Modo demo - no hay BLE conectado");
-    alert('Peso (demo): ' + peso + ' kg');
+    alert('Demo - peso: ' + peso + ' kg');
   }
 }
 
