@@ -935,12 +935,15 @@ function enviarPeso() {
     console.log("Intentando enviar:", data);
     
     try {
-      // Convertir a bytes
-      var bytes = new TextEncoder().encode(data);
-      console.log("Bytes:", Array.from(bytes));
+      // VERSIÓN QUE FUNCIONA - ArrayBuffer manual
+      var buffer = new ArrayBuffer(data.length);
+      var view = new Uint8Array(buffer);
+      for(var i=0; i<data.length; i++) {
+        view[i] = data.charCodeAt(i);
+      }
+      console.log("Bytes:", Array.from(view));
       
-      // Escribir directamente
-      bleRxChar.writeValue(bytes).then(function() {
+      bleRxChar.writeValue(buffer).then(function() {
         console.log("✓ Escritura exitosa");
         alert('✓ Enviado: ' + peso + ' kg');
       }).catch(function(e) {
