@@ -399,7 +399,7 @@ var selectedDay = '';
 var sheetsOk = false;
 var saveInterval = null;      // registrar lecturas cada 3s
 var connMode = 'demo';        // 'demo' | 'bt' | 'wifi'
-var bleDevice = null, bleChar = null, bleRxChar = null;  // Web Bluetooth
+var bleDevice = null, bleChar = null, bleRxChar = null, bleService = null;
   // UUIDs del servicio Nordic UART (deben coincidir con el código del ESP32)
 var BLE_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 → app (notify)
@@ -443,30 +443,36 @@ function connectBLE() {
     return;
   }
   
-  // CAMBIAR ESTO - buscar por servicios disponibles
+  // Solicitar dispositivo
   navigator.bluetooth.requestDevice({
-    acceptAllDevices: true,  // ← CAMBIAR ESTO
-    optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
+    acceptAllDevices: true,
+    optionalServices: [BLE_SERVICE]
   })
   .then(function(device) {
     bleDevice = device;
     device.addEventListener('gattserverdisconnected', onBleDisconnect);
     return device.gatt.connect();
   })
-  .then(function(server) { return server.getPrimaryService(BLE_SERVICE); })
-  .then(function(service) { return service.getCharacteristic(BLE_TX); })
-   .then(function(ch) {
-    bleChar = ch;  //TX - notifications
+  .then(function(server) {
+    return server.getPrimaryService(BLE_SERVICE);
+  })
+  .then(function(service) {
+    bleService = service;  // ← Guardar servicio para después
+    
+    // Obtener característica TX (para recibir datos del ESP32)
+    return service.getCharacteristic(BLE_TX);
+  })
+  .then(function(ch) {
+    bleChar = ch;
     return ch.startNotifications();
   })
   .then(function() {
-    // Obtener característica de escritura (RX)
-    return service.getCharacteristic(BLE_RX);
+    bleChar.addEventListener('characteristicvaluechanged', onBleData);
+    // ← AHORA obtener RX (para enviar al ESP32)
+    return bleService.getCharacteristic(BLE_RX);
   })
   .then(function(rxChar) {
-    bleRxChar = rxChar;  // Guardar para enviar peso
-    bleChar.addEventListener('characteristicvaluechanged', onBleData);
-    bleChar.addEventListener('characteristicvaluechanged', onBleData);
+    bleRxChar = rxChar;  // ← Guardar para enviarPeso()
     doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
   })
   .catch(function(e) {
