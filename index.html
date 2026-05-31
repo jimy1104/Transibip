@@ -359,16 +359,6 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     </div>
 
     <div class="card">
-      <div class="card-title">Pressure threshold</div>
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Alert when pressure exceeds (0–1023)</div>
-      <input class="input-field" type="number" id="pressureThresh" value="700" min="0" max="1023" oninput="onThreshInput()">
-      <div class="row" style="margin-top:4px">
-        <span style="font-size:11px;color:#94A3B8">Current: <span id="curThresh">700</span></span>
-        <span style="font-size:11px;color:#10B981;font-weight:600" id="threshLabel">Strict</span>
-      </div>
-    </div>
-
-    <div class="card">
       <div class="card-title">Device info</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse">
         <tr><td style="color:#94A3B8;padding:5px 0">Board</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ESP32</td></tr>
@@ -935,15 +925,10 @@ function enviarPeso() {
     console.log("Intentando enviar:", data);
     
     try {
-      // VERSIÓN QUE FUNCIONA - ArrayBuffer manual
-      var buffer = new ArrayBuffer(data.length);
-      var view = new Uint8Array(buffer);
-      for(var i=0; i<data.length; i++) {
-        view[i] = data.charCodeAt(i);
-      }
-      console.log("Bytes:", Array.from(view));
-      
-      bleRxChar.writeValue(buffer).then(function() {
+    var buffer = new ArrayBuffer(data.length);
+  var view = new Uint8Array(buffer);
+  for(var i=0; i<data.length; i++) view[i] = data.charCodeAt(i);
+  bleRxChar.writeValue(buffer).then(function() {
         console.log("✓ Escritura exitosa");
         alert('✓ Enviado: ' + peso + ' kg');
       }).catch(function(e) {
