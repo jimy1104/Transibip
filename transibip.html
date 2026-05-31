@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TransiBip</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
+.app{width:100%;max-width:430px;background:#0F172A;min-height:100vh;position:relative;display:flex;flex-direction:column}
+.screen{flex:1;overflow-y:auto;padding:20px 16px 80px;display:none}
+.screen.active{display:block}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:60px;background:#1E293B;border-top:1px solid #334155;display:flex;align-items:center;z-index:5}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 0;border:none;background:none}
+.tab-icon{font-size:20px;line-height:1}
+.tab-label{font-size:10px;color:#94A3B8;font-weight:500}
+.tab.active .tab-label{color:#10B981}
+.screen-title{font-size:22px;font-weight:600;color:#F1F5F9;margin-bottom:4px}
+.screen-sub{font-size:12px;color:#94A3B8;margin-bottom:18px}
+.card{background:#1E293B;border-radius:12px;border:1px solid #1E3A5F;padding:14px;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.btn{border:none;border-radius:10px;padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
+.btn-primary{background:#10B981;color:#fff}
+.btn-secondary{background:#1E293B;color:#94A3B8;border:1px solid #334155}
+.row{display:flex;align-items:center;justify-content:space-between}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot-green{background:#10B981}
+.dot-gray{background:#475569}
+.gauge-track{height:8px;background:#334155;border-radius:4px;overflow:hidden;margin:6px 0 2px}
+.gauge-fill{height:8px;border-radius:4px;transition:width .5s}
+.status-ok{color:#94A3B8;font-size:10px}
+.status-hi{color:#EF4444;font-size:10px;font-weight:600}
+.crosshair{width:90px;height:90px;border-radius:50%;background:#0F172A;border:1px solid #334155;position:relative;overflow:hidden;flex-shrink:0}
+.hline{position:absolute;left:0;right:0;top:50%;height:1px;background:#334155}
+.vline{position:absolute;top:0;bottom:0;left:50%;width:1px;background:#334155}
+.gydot{position:absolute;width:10px;height:10px;border-radius:50%;background:#475569;transform:translate(-50%,-50%);transition:.3s}
+.gydot.active{background:#10B981}
+.coord-box{border:1px solid #334155;border-radius:8px;padding:6px 10px;text-align:center;margin-bottom:6px}
+.coord-label{font-size:10px;color:#94A3B8}
+.coord-val{font-size:18px;font-weight:600;color:#10B981;font-family:monospace}
+.no-conn{background:#1E293B;border:1px dashed #334155;border-radius:10px;padding:20px;text-align:center;margin-bottom:12px}
+.connect-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;border:1px solid #334155;background:#1E293B;cursor:pointer;font-size:13px;font-weight:600;color:#94A3B8}
+.connect-btn.on{border-color:#10B981;background:#0F4C2D;color:#10B981}
+.period-row{display:flex;background:#1E293B;border-radius:10px;padding:4px;margin-bottom:16px;gap:2px}
+.period-btn{flex:1;padding:7px;border:none;background:transparent;color:#94A3B8;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer}
+.period-btn.active{background:#10B981;color:#fff}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-card{background:#1E293B;border:1px solid #1E3A5F;border-radius:10px;padding:10px;text-align:center}
+.stat-num{font-size:20px;font-weight:700}
+.stat-label{font-size:10px;color:#94A3B8;margin-top:3px}
+.bars{display:flex;align-items:flex-end;height:90px;gap:4px}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center}
+.bar-wrap{display:flex;align-items:flex-end;height:80px;gap:2px;width:100%}
+.bar{flex:1;border-radius:2px;min-height:3px}
+.bar-lbl{font-size:9px;color:#94A3B8;margin-top:4px}
+.legend-row{display:flex;gap:12px;margin-top:8px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#94A3B8}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+.switch{width:46px;height:26px;background:#334155;border-radius:13px;position:relative;cursor:pointer;border:none;transition:.2s}
+.switch.on{background:#10B981}
+.switch::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s}
+.switch.on::after{left:23px}
+.input-field{background:#0F172A;border:1px solid #334155;border-radius:8px;padding:11px 12px;color:#F1F5F9;font-size:14px;width:100%;margin-bottom:8px}
+.fsr-card{background:#1E293B;border-radius:12px;border:1px solid #1E3A5F;padding:14px;margin-bottom:12px}
+.fsr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.fsr-title{font-size:12px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.5px}
+.fsr-led{width:14px;height:14px;border-radius:50%;border:2px solid #EF4444;background:#1E293B;transition:.3s}
+.fsr-led.on{background:#EF4444;box-shadow:0 0 8px #EF4444}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#1E293B;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:430px}
+.modal-close{background:none;border:none;color:#94A3B8;font-size:22px;cursor:pointer;padding:0}
+.conn-method-row{display:flex;gap:8px;margin-bottom:16px}
+.conn-method-btn{flex:1;padding:11px;border-radius:10px;border:1px solid #334155;background:#0F172A;color:#94A3B8;font-size:13px;font-weight:600;cursor:pointer;text-align:center}
+.conn-method-btn.active{border-color:#10B981;color:#10B981;background:#0A2A1F}
+.device-item{display:flex;align-items:center;gap:12px;padding:13px;background:#0F172A;border-radius:10px;margin-bottom:8px;cursor:pointer;border:1px solid transparent}
+.device-icon{width:42px;height:42px;border-radius:50%;background:#1E293B;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.wifi-form{display:none}
+.wifi-form.show{display:block}
+.bt-list{display:none}
+.bt-list.show{display:block}
+.scanning{text-align:center;padding:20px 0;color:#94A3B8;font-size:13px}
+/* Sheets status badge */
+.sheets-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:10px}
+.sheets-badge.ok{background:#0A2A1F;border:1px solid #10B981;color:#10B981}
+.sheets-badge.err{background:#2D1010;border:1px solid #EF4444;color:#EF4444}
+.sheets-badge.off{background:#1E293B;border:1px solid #334155;color:#94A3B8}
+/* History list */
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#0F172A;border-radius:8px;margin-bottom:6px;border-left:3px solid #334155}
+.history-item.hi{border-left-color:#EF4444}
+.history-item.ok{border-left-color:#10B981}
+.history-time{font-size:12px;color:#94A3B8;font-family:monospace}
+.history-vals{font-size:11px;color:#F1F5F9}
+.day-selector{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.day-selector::-webkit-scrollbar{display:none}
+.day-chip{padding:5px 12px;border-radius:20px;border:1px solid #334155;background:#1E293B;color:#94A3B8;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.day-chip.active{background:#10B981;border-color:#10B981;color:#fff}
+.empty-state{text-align:center;padding:30px 0;color:#475569;font-size:13px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #334155;border-top-color:#10B981;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}
+.tip-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.tip-text{font-size:12px;color:#94A3B8;line-height:1.6}
+.peso-card{background:#0F172A;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:12px}
+.peso-label{font-size:12px;color:#94A3B8;margin-bottom:6px}
+.peso-input{background:#1E293B;border:1px solid #334155;border-radius:8px;padding:12px;color:#10B981;font-size:24px;font-weight:600;text-align:center;width:100%;margin-bottom:8px}
+.peso-input:focus{outline:none;border-color:#10B981}
+
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- Connect Modal -->
+  <div class="modal-bg" id="connModal">
+    <div class="modal">
+      <div class="row" style="margin-bottom:16px">
+        <div>
+          <div style="font-size:17px;font-weight:700;color:#F1F5F9">Connect device</div>
+          <div style="font-size:12px;color:#94A3B8">Choose connection method</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="conn-method-row">
+        <button class="conn-method-btn active" id="btMethodBtn" onclick="switchMethod('bt')">📶 Bluetooth</button>
+        <button class="conn-method-btn" id="wifiMethodBtn" onclick="switchMethod('wifi')">🌐 WiFi</button>
+      </div>
+      <div class="bt-list show" id="btList">
+        <button class="btn btn-primary" onclick="connectBLE()" style="margin-top:0">🔌 Conectar por Bluetooth</button>
+        <div style="font-size:11px;color:#94A3B8;margin:12px 0;text-align:center">— o —</div>
+        <button class="btn btn-secondary" onclick="doConnect('Demo (simulado)','demo')">▶️ Probar en modo demo</button>
+        <div style="font-size:10px;color:#475569;margin-top:10px;line-height:1.5">El modo demo genera datos de prueba para ver la app funcionando sin el ESP32. El Bluetooth real requiere Chrome en Android y el dispositivo encendido.</div>
+        <div id="bleError" style="color:#EF4444;font-size:12px;margin-top:8px;display:none"></div>
+      </div>
+      <div class="wifi-form" id="wifiForm">
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Network SSID</div>
+        <input class="input-field" id="wifiSSID" placeholder="e.g. TransiBip-ESP32">
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Password</div>
+        <input class="input-field" id="wifiPass" type="password" placeholder="WiFi password">
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">ESP32 IP address (optional)</div>
+        <input class="input-field" id="wifiIP" placeholder="e.g. 192.168.1.100" style="margin-bottom:12px">
+        <div id="wifiError" style="color:#EF4444;font-size:12px;margin-bottom:8px;display:none"></div>
+        <button class="btn btn-primary" id="wifiConnBtn" onclick="doWifiConnect()" style="margin-top:0">Connect via WiFi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONITOR -->
+  <div class="screen active" id="s-monitor">
+    <div style="padding-top:env(safe-area-inset-top,12px)"></div>
+    <div class="row" style="margin-bottom:18px">
+      <div>
+        <div class="screen-title">TransiBip</div>
+        <div style="font-size:12px;color:#94A3B8">Real-time monitoring</div>
+      </div>
+      <button class="connect-btn" id="connectBtn" onclick="openModal()">
+        <span class="dot dot-gray" id="connDot"></span>
+        <span id="connLabel">Connect</span>
+      </button>
+    </div>
+
+     <div class="no-conn" id="noBanner">
+      <div style="font-size:28px;margin-bottom:8px">📡</div>
+      <div style="font-size:13px;color:#94A3B8">Tap Connect to pair with your ESP32 device</div>
+    </div>
+
+    <div id="greenLedBar" style="display:none;background:#0A2A1F;border:1px solid #10B981;border-radius:10px;padding:11px 14px;margin-bottom:12px;flex-direction:row;align-items:center;gap:10px">
+      <div style="width:14px;height:14px;border-radius:50%;background:#10B981;border:2px solid #10B981;box-shadow:0 0 8px #10B981;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:#10B981" id="connDeviceName">TRANSIBIP</div>
+        <div style="font-size:11px;color:#94A3B8" id="connMethodLabel">Connected via Bluetooth</div>
+      </div>
+      <button onclick="doDisconnect()" style="background:none;border:1px solid #334155;color:#94A3B8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer">Disconnect</button>
+    </div>
+
+    <!-- PESO DEL PACIENTE - NUEVO -->
+    <div class="peso-card" id="pesoCard" style="display:none">
+      <div class="peso-label">PESO DEL PACIENTE (KG)</div>
+      <input type="number" class="peso-input" id=" pesoInput" placeholder="0" inputmode="numeric">
+      <button class="btn btn-primary" onclick="enviarPeso()">ENVIAR PESO AL ESP32</button>
+    </div>
+
+    <!-- Sheets status -->
+    <div id="sheetsBadge" class="sheets-badge off">🗂 Google Sheets: no configurado</div>
+
+    <!-- Back muscles -->
+    <div class="card">
+      <div class="card-title">Back muscles map</div>
+      <div style="display:flex;justify-content:center;margin:8px 0">
+        <svg width="160" height="185" viewBox="0 0 160 185">
+          <ellipse cx="80" cy="16" rx="16" ry="18" fill="#475569"/>
+          <ellipse cx="64" cy="16" rx="5" ry="7" fill="#475569"/>
+          <ellipse cx="96" cy="16" rx="5" ry="7" fill="#475569"/>
+          <rect x="73" y="32" width="14" height="12" rx="4" fill="#475569"/>
+          <ellipse id="m-trap-l" cx="48" cy="60" rx="28" ry="13" fill="#334155"/>
+          <ellipse id="m-trap-r" cx="112" cy="60" rx="28" ry="13" fill="#334155"/>
+          <rect id="m-rhom-l" x="32" y="76" width="34" height="20" rx="5" fill="#334155"/>
+          <rect id="m-rhom-r" x="94" y="76" width="34" height="20" rx="5" fill="#334155"/>
+          <rect id="m-lat-l" x="24" y="98" width="40" height="26" rx="6" fill="#334155"/>
+          <rect id="m-lat-r" x="96" y="98" width="40" height="26" rx="6" fill="#334155"/>
+          <rect id="m-erect-l" x="30" y="126" width="32" height="20" rx="5" fill="#334155"/>
+          <rect id="m-erect-r" x="98" y="126" width="32" height="20" rx="5" fill="#334155"/>
+          <rect x="76" y="44" width="8" height="108" rx="3" fill="#1E40AF" id="m-spine"/>
+        </svg>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div>High pressure</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#93C5FD"></div>Normal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#334155"></div>No data</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Glutes map</div>
+      <div style="display:flex;justify-content:center;margin:8px 0">
+        <svg width="140" height="110" viewBox="0 0 140 110">
+          <ellipse cx="70" cy="14" rx="22" ry="9" fill="#334155" id="g-sacrum"/>
+          <ellipse cx="38" cy="60" rx="30" ry="40" fill="#334155" id="g-left"/>
+          <ellipse cx="102" cy="60" rx="30" ry="40" fill="#334155" id="g-right"/>
+          <ellipse cx="60" cy="28" rx="18" ry="12" fill="#475569" id="g-med-l"/>
+          <ellipse cx="80" cy="28" rx="18" ry="12" fill="#475569" id="g-med-r"/>
+          <rect x="69" y="60" width="2" height="50" fill="#0F172A"/>
+        </svg>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div>High pressure</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#93C5FD"></div>Normal</div>
+      </div>
+    </div>
+
+    <div class="fsr-card">
+      <div class="fsr-header"><span class="fsr-title">Sensor espalda (celda 50kg)</span><div class="fsr-led" id="backLed"></div></div>
+      <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="backFill" style="width:0%;background:#10B981"></div></div>
+      <div id="backStatus" class="status-ok">Normal</div>
+    </div>
+
+    <div class="fsr-card">
+      <div class="fsr-header"><span class="fsr-title">Sensor asiento (celda 20kg)</span><div class="fsr-led" id="bottomLed"></div></div>
+      <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="bottomVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="bottomFill" style="width:0%;background:#10B981"></div></div>
+      <div id="bottomStatus" class="status-ok">Normal</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Posición (giroscopio)</div>
+      <div class="row" style="gap:12px;align-items:center">
+        <div style="flex:1">
+          <div class="coord-box"><div class="coord-label">X</div><div class="coord-val" id="gyroX">---</div></div>
+          <div class="coord-box"><div class="coord-label">Y</div><div class="coord-val" id="gyroY">---</div></div>
+        </div>
+        <div class="crosshair">
+          <div class="hline"></div><div class="vline"></div>
+          <div class="gydot" id="gydot" style="left:50%;top:50%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS (History from Sheets) -->
+  <div class="screen" id="s-analytics">
+    <div style="padding-top:env(safe-area-inset-top,12px)"></div>
+    <div class="screen-title">Analytics</div>
+    <div class="screen-sub">Historial guardado en el dispositivo (Google Sheets opcional)</div>
+
+    <!-- No sheets configured -->
+    <div id="analyticsNoSheets" class="card" style="text-align:center;padding:24px">
+      <div style="font-size:28px;margin-bottom:8px">🗂</div>
+      <div style="font-size:14px;font-weight:600;color:#F1F5F9;margin-bottom:6px">Google Sheets no configurado</div>
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:14px">Ve a Settings y pega la URL de tu Apps Script para ver el historial aquí.</div>
+      <button class="btn btn-secondary" onclick="showTab('settings',document.querySelectorAll('.tab')[2])" style="width:auto;padding:8px 20px;margin:0 auto">Ir a Settings</button>
+    </div>
+
+    <div id="analyticsContent" style="display:none">
+      <!-- Stat cards -->
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-num" id="stat-posture" style="color:#10B981">--%</div><div class="stat-label">Buena postura</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-back" style="color:#93C5FD">---</div><div class="stat-label">Avg espalda</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-bottom" style="color:#06B6D4">---</div><div class="stat-label">Avg asiento</div></div>
+      </div>
+
+      <!-- Day selector -->
+      <div style="font-size:11px;color:#94A3B8;margin-bottom:6px;font-weight:600">SELECCIONA UN DÍA</div>
+      <div class="day-selector" id="daySelector"></div>
+
+      <!-- Refresh button -->
+      <div class="row" style="gap:8px;margin-bottom:12px">
+        <button class="btn btn-secondary" onclick="loadAnalytics()" id="refreshBtn" style="margin:0">🔄 Actualizar</button>
+        <button class="btn btn-secondary" onclick="if(confirm('¿Borrar el historial local?'))clearLocalHistory()" style="margin:0;max-width:130px">🗑 Borrar</button>
+      </div>
+
+      <!-- History list -->
+      <div class="card">
+        <div class="card-title" id="historyTitle">Historial del día</div>
+        <div id="historyList"><div class="empty-state">Selecciona un día para ver los datos</div></div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-title">Presión promedio</div>
+        <div class="bars" id="chartBars" style="height:80px"></div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Espalda</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#06B6D4"></div>Asiento</div>
+        </div>
+      </div>
+
+      <!-- Insights / consejos -->
+      <div class="card">
+        <div class="card-title">Consejos de postura</div>
+        <div id="insights"><div class="empty-state" style="padding:10px 0">Sin datos para analizar</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="s-settings">
+    <div style="padding-top:env(safe-area-inset-top,12px)"></div>
+    <div class="screen-title">Settings</div>
+    <div class="screen-sub">Device & alert configuration</div>
+
+    <div class="card">
+      <div class="card-title">Connection status</div>
+      <div class="row" style="background:#0F172A;padding:11px;border-radius:8px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#F1F5F9" id="bt-name">Not connected</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:2px" id="bt-sub">Tap Monitor to connect</div>
+        </div>
+        <div class="dot" id="bt-dot" style="background:#475569"></div>
+      </div>
+    </div>
+
+    <!-- Google Sheets config -->
+    <div class="card">
+      <div class="card-title">🗂 Google Sheets</div>
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">
+        Pega aquí la URL de tu Apps Script desplegado. Los datos del ESP32 se guardarán automáticamente separados por día.
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">URL del Apps Script</div>
+      <input class="input-field" id="scriptURL" placeholder="https://script.google.com/macros/s/..." style="font-size:12px">
+      <div id="sheetsTestResult" style="font-size:11px;margin-bottom:6px;display:none"></div>
+      <button class="btn btn-secondary" onclick="testSheetsConnection()" style="margin-top:4px;margin-bottom:4px">🔌 Probar conexión</button>
+      <div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.5">
+        ¿No tienes el script? Abre Google Sheets → Extensiones → Apps Script → pega el código del archivo <b>postureguard_appscript.gs</b> → Implementar → Aplicación web → Cualquier usuario.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Buzzer settings</div>
+      <div class="row" style="margin-bottom:12px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#F1F5F9">Buzzer enabled</div>
+          <div style="font-size:11px;color:#94A3B8">Alert on high pressure</div>
+        </div>
+        <button class="switch on" id="buzzerSwitch" onclick="toggleBuzzer()"></button>
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Buzzer threshold (0–1023)</div>
+      <input class="input-field" type="number" id="buzzerThresh" value="600" min="0" max="1023">
+    </div>
+
+    <div class="card">
+      <div class="card-title">Pressure threshold</div>
+      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Alert when pressure exceeds (0–1023)</div>
+      <input class="input-field" type="number" id="pressureThresh" value="700" min="0" max="1023" oninput="onThreshInput()">
+      <div class="row" style="margin-top:4px">
+        <span style="font-size:11px;color:#94A3B8">Current: <span id="curThresh">700</span></span>
+        <span style="font-size:11px;color:#10B981;font-weight:600" id="threshLabel">Strict</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Device info</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr><td style="color:#94A3B8;padding:5px 0">Board</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ESP32</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Back sensor</td><td style="text-align:right;color:#F1F5F9;font-weight:600">Celda HX711 50kg</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Seat sensor</td><td style="text-align:right;color:#F1F5F9;font-weight:600">Celda HX711 20kg</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (X/Y)</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Google Sheets ☁️</td></tr>
+      </table>
+    </div>
+
+    <button class="btn btn-primary" id="saveBtn" onclick="saveSettings()">Save configuration</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab active" onclick="showTab('monitor',this)"><span class="tab-icon">🫀</span><span class="tab-label">Monitor</span></button>
+    <button class="tab" onclick="showTab('analytics',this)"><span class="tab-icon">📊</span><span class="tab-label">Analytics</span></button>
+    <button class="tab" onclick="showTab('settings',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Settings</span></button>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+var connected=false, pressureThreshold=700, sensorInterval=null, gyroInterval=null;
+var backP=0, bottomP=0, gyroXv=0, gyroYv=0;
+var scriptURL = localStorage.getItem('scriptURL') || '';
+var selectedDay = '';
+var sheetsOk = false;
+var saveInterval = null;      // registrar lecturas cada 3s
+var connMode = 'demo';        // 'demo' | 'bt' | 'wifi'
+var bleDevice = null, bleChar = null;  // Web Bluetooth
+// UUIDs del servicio Nordic UART (deben coincidir con el código del ESP32)
+var BLE_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 → app (notify)
+
+// ── Init ───────────────────────────────────────────────────────────────────
+window.onload = function() {
+  scriptURL = localStorage.getItem('scriptURL') || '';
+  pressureThreshold = parseInt(localStorage.getItem('threshold') || '700');
+  document.getElementById('scriptURL').value = scriptURL;
+  document.getElementById('pressureThresh').value = pressureThreshold;
+  document.getElementById('curThresh').textContent = pressureThreshold;
+  if (scriptURL) updateSheetsBadge('checking'); else updateSheetsBadge('off');
+};
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  document.getElementById('s-'+name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'analytics') loadAnalytics();
+}
+
+// ── Connect modal ──────────────────────────────────────────────────────────
+function openModal() {
+  if (connected) { doDisconnect(); return; }
+  document.getElementById('connModal').classList.add('open');
+  document.getElementById('bleError').style.display = 'none';
+  switchMethod('bt');
+}
+
+// ── Web Bluetooth (conexión real al ESP32) ──────────────────────────────────
+function connectBLE() {
+  var err = document.getElementById('bleError');
+  err.style.display = 'none';
+  if (!navigator.bluetooth) {
+    err.textContent = 'Este navegador no soporta Bluetooth. Usa Chrome en Android.';
+    err.style.display = 'block';
+    return;
+  }
+  navigator.bluetooth.requestDevice({
+    filters: [{ namePrefix: 'TRANSIBIP' }],  // MAYÚSCULAS - CORREGIDO
+    optionalServices: [BLE_SERVICE]
+  })
+  .then(function(device) {
+    bleDevice = device;
+    device.addEventListener('gattserverdisconnected', onBleDisconnect);
+    return device.gatt.connect();
+  })
+  .then(function(server) { return server.getPrimaryService(BLE_SERVICE); })
+  .then(function(service) { return service.getCharacteristic(BLE_TX); })
+  .then(function(ch) { bleChar = ch; return ch.startNotifications(); })
+  .then(function() {
+    bleChar.addEventListener('characteristicvaluechanged', onBleData);
+    doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
+  })
+  .catch(function(e) {
+    err.textContent = 'Error: ' + e.message;
+    err.style.display = 'block';
+  });
+}
+
+// El ESP32 envía una línea CSV: "back,bottom,gyroX,gyroY"
+function onBleData(event) {
+  var txt = new TextDecoder().decode(event.target.value).trim();
+  var p = txt.split(',');
+  if (p.length < 2) return;
+  backP    = parseInt(p[0]) || 0;
+  bottomP  = parseInt(p[1]) || 0;
+  gyroXv   = p.length > 2 ? (parseFloat(p[2]) || 0) : 0;
+  gyroYv   = p.length > 3 ? (parseFloat(p[3]) || 0) : 0;
+  updateSensorUI();
+  updateGyroUI();
+}
+
+function onBleDisconnect() {
+  if (connected) doDisconnect();
+}
+function closeModal() { document.getElementById('connModal').classList.remove('open'); }
+function switchMethod(m) {
+  document.getElementById('btMethodBtn').classList.toggle('active', m==='bt');
+  document.getElementById('wifiMethodBtn').classList.toggle('active', m==='wifi');
+  document.getElementById('btList').classList.toggle('show', m==='bt');
+  document.getElementById('wifiForm').classList.toggle('show', m==='wifi');
+}
+function doWifiConnect() {
+  var ssid = document.getElementById('wifiSSID').value.trim();
+  var pass  = document.getElementById('wifiPass').value;
+  var err   = document.getElementById('wifiError');
+  if (!ssid) { err.textContent='Please enter network SSID'; err.style.display='block'; return; }
+  if (!pass) { err.textContent='Please enter WiFi password'; err.style.display='block'; return; }
+  err.style.display = 'none';
+  var btn = document.getElementById('wifiConnBtn');
+  btn.textContent = 'Connecting...'; btn.disabled = true;
+  setTimeout(function() { btn.textContent='Connect via WiFi'; btn.disabled=false; doConnect(ssid, 'wifi'); }, 1500);
+}
+
+// ── Connection ─────────────────────────────────────────────────────────────
+function doConnect(name, method) {
+  closeModal(); connected = true; connMode = method;
+  var methodLabel = method==='wifi' ? 'WiFi' : method==='demo' ? 'Demo' : 'Bluetooth';
+  document.getElementById('connectBtn').className = 'connect-btn on';
+  document.getElementById('connDot').className = 'dot dot-green';
+  document.getElementById('connLabel').textContent = 'Connected';
+  document.getElementById('noBanner').style.display = 'none';
+  document.getElementById('greenLedBar').style.display = 'flex';
+  document.getElementById('connDeviceName').textContent = name;
+  document.getElementById('connMethodLabel').textContent = 'Connected via ' + methodLabel;
+  document.getElementById('bt-name').textContent = name;
+  document.getElementById('bt-sub').textContent = 'Active session via ' + methodLabel;
+  document.getElementById('bt-dot').style.background = '#10B981';
+    document.getElementById('pesoCard').style.display = 'block';
+
+  // En modo demo/wifi generamos datos; por Bluetooth los datos llegan del ESP32
+  if (method === 'demo' || method === 'wifi') startSensors();
+  // Registrar lecturas cada 3s (siempre local; sincroniza a Sheets si está configurado)
+  saveInterval = setInterval(function() { recordReading(); }, 3000);
+}
+
+function doDisconnect() {
+  connected = false;
+  document.getElementById('connectBtn').className = 'connect-btn';
+  document.getElementById('connDot').className = 'dot dot-gray';
+  document.getElementById('connLabel').textContent = 'Connect';
+  document.getElementById('noBanner').style.display = 'block';
+  document.getElementById('greenLedBar').style.display = 'none';
+  document.getElementById('bt-name').textContent = 'Not connected';
+  document.getElementById('bt-sub').textContent = 'Tap Monitor to connect';
+  document.getElementById('bt-dot').style.background = '#475569';
+  document.getElementById('pesoCard').style.display = 'none';
+  clearInterval(saveInterval);
+  if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
+    try { bleDevice.gatt.disconnect(); } catch (e) {}
+  }
+  stopSensors(); resetSensors();
+}
+
+// ── Sensors (simulated — replace with real ESP32 data) ─────────────────────
+function startSensors() {
+  sensorInterval = setInterval(function() {
+    backP   = Math.floor(300 + Math.random() * 723);
+    bottomP = Math.floor(200 + Math.random() * 823);
+    updateSensorUI();
+  }, 1500);
+  gyroInterval = setInterval(function() {
+    // Simula ángulos de inclinación en grados (-30° a 30°)
+    gyroXv = Math.round((Math.random()*60-30)*10)/10;
+    gyroYv = Math.round((Math.random()*60-30)*10)/10;
+    updateGyroUI();
+  }, 800);
+}
+function stopSensors()  { clearInterval(sensorInterval); clearInterval(gyroInterval); }
+function resetSensors() { backP=0; bottomP=0; gyroXv=0; gyroYv=0; updateSensorUI(); updateGyroUI(); }
+
+function updateSensorUI() {
+  var th = pressureThreshold;
+  var bHigh = backP >= th, btHigh = bottomP >= th;
+  document.getElementById('backVal').textContent = backP;
+  document.getElementById('bottomVal').textContent = bottomP;
+  document.getElementById('backVal').style.color   = bHigh ? '#EF4444' : '#10B981';
+  document.getElementById('bottomVal').style.color = btHigh ? '#EF4444' : '#10B981';
+  document.getElementById('backFill').style.width    = Math.round(backP/1023*100)+'%';
+  document.getElementById('backFill').style.background   = bHigh ? '#EF4444' : '#10B981';
+  document.getElementById('bottomFill').style.width  = Math.round(bottomP/1023*100)+'%';
+  document.getElementById('bottomFill').style.background = btHigh ? '#EF4444' : '#10B981';
+  document.getElementById('backStatus').textContent   = bHigh  ? '⚠ HIGH PRESSURE' : 'Normal';
+  document.getElementById('backStatus').className     = bHigh  ? 'status-hi' : 'status-ok';
+  document.getElementById('bottomStatus').textContent = btHigh ? '⚠ HIGH PRESSURE' : 'Normal';
+  document.getElementById('bottomStatus').className   = btHigh ? 'status-hi' : 'status-ok';
+  document.getElementById('backLed').className   = 'fsr-led' + (bHigh  ? ' on' : '');
+  document.getElementById('bottomLed').className = 'fsr-led' + (btHigh ? ' on' : '');
+  updateMuscles(bHigh, btHigh);
+}
+
+function updateMuscles(bHigh, btHigh) {
+  var bc  = backP > 0 ? (bHigh ? '#EF4444' : '#93C5FD') : '#334155';
+  var bl  = backP > 0 ? (bHigh ? '#FCA5A5' : '#BFDBFE') : '#475569';
+  var btc = bottomP > 0 ? (btHigh ? '#EF4444' : '#93C5FD') : '#334155';
+  var btl = bottomP > 0 ? (btHigh ? '#FCA5A5' : '#BFDBFE') : '#475569';
+  ['m-rhom-l','m-rhom-r','m-lat-l','m-lat-r','m-erect-l','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bc)});
+  ['m-trap-l','m-trap-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bl)});
+  document.getElementById('m-spine').setAttribute('fill', bHigh ? '#DC2626' : '#1E40AF');
+  ['g-left','g-right'].forEach(function(id){document.getElementById(id).setAttribute('fill',btc)});
+  ['g-med-l','g-med-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',btl)});
+  document.getElementById('g-sacrum').setAttribute('fill', bottomP > 0 ? '#06B6D4' : '#334155');
+}
+
+function updateGyroUI() {
+  document.getElementById('gyroX').textContent = connected ? (gyroXv + '°') : '---';
+  document.getElementById('gyroY').textContent = connected ? (gyroYv + '°') : '---';
+  var dot = document.getElementById('gydot');
+  if (connected) {
+    // Ángulo en grados → posición en el crosshair (1° ≈ 1px, tope ±38px)
+    dot.className = 'gydot active';
+    dot.style.left = 'calc(50% + ' + Math.max(-38,Math.min(38,gyroXv)) + 'px)';
+    dot.style.top  = 'calc(50% + ' + Math.max(-38,Math.min(38,gyroYv)) + 'px)';
+  } else {
+    dot.className = 'gydot'; dot.style.left = '50%'; dot.style.top = '50%';
+  }
+}
+
+// ── Google Sheets integration ──────────────────────────────────────────────
+function updateSheetsBadge(state, msg) {
+  var badge = document.getElementById('sheetsBadge');
+  if (state === 'ok')       { badge.className='sheets-badge ok'; badge.textContent='🗂 Google Sheets: conectado ✓'; }
+  else if (state === 'err') { badge.className='sheets-badge err'; badge.textContent='🗂 Sheets: error — ' + (msg||''); }
+  else if (state === 'checking') { badge.className='sheets-badge off'; badge.textContent='🗂 Verificando Sheets...'; }
+  else                      { badge.className='sheets-badge off'; badge.textContent='💾 Historial local activo (Sheets opcional)'; }
+}
+
+// ── Historial local (funciona sin Google Sheets) ───────────────────────────
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function nowTime() {
+  var d = new Date();
+  return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+function getLocalDays() {
+  try { return JSON.parse(localStorage.getItem('pg_days') || '[]').sort().reverse(); }
+  catch (e) { return []; }
+}
+function getLocalDay(day) {
+  try { return JSON.parse(localStorage.getItem('pg_hist_' + day) || '[]'); }
+  catch (e) { return []; }
+}
+function clearLocalHistory() {
+  getLocalDays().forEach(function(d) { localStorage.removeItem('pg_hist_' + d); });
+  localStorage.removeItem('pg_days');
+  selectedDay = '';
+  loadAnalytics();
+}
+
+// Registrar una lectura: siempre local, y a Sheets si está configurado
+function recordReading() {
+  if (!connected) return;
+  var day = todayStr();
+  var key = 'pg_hist_' + day;
+  var arr;
+  try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { arr = []; }
+  arr.push({ time: nowTime(), back: backP, bottom: bottomP, gyroX: gyroXv, gyroY: gyroYv });
+  if (arr.length > 2000) arr = arr.slice(-2000);
+  localStorage.setItem(key, JSON.stringify(arr));
+  var days = getLocalDays();
+  if (days.indexOf(day) < 0) { days.push(day); localStorage.setItem('pg_days', JSON.stringify(days)); }
+  if (scriptURL) saveToSheets();
+}
+
+function saveToSheets() {
+  if (!scriptURL || !connected) return;
+  var url = scriptURL + '?action=write'
+    + '&back='   + backP
+    + '&bottom=' + bottomP
+    + '&gyroX='  + gyroXv
+    + '&gyroY='  + gyroYv;
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        sheetsOk = true;
+        updateSheetsBadge('ok');
+      }
+    })
+    .catch(function(e) { updateSheetsBadge('err', 'sin conexión'); });
+}
+
+function testSheetsConnection() {
+  var url = document.getElementById('scriptURL').value.trim();
+  if (!url) { showSheetsTestResult('Pega la URL primero', false); return; }
+  
+  showSheetsTestResult('<span class="spinner"></span>Probando...', null);
+  
+  // Usar proxy para evitar CORS
+  var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url + '?action=days');
+  
+  fetch(proxyUrl)
+    .then(function(r) { return r.text(); })
+    .then(function(text) {
+      try {
+        var data = JSON.parse(text);
+        if (data.status === 'ok') {
+          showSheetsTestResult('✅ Conexión exitosa!', true);
+          scriptURL = url;
+          localStorage.setItem('scriptURL', url);
+          updateSheetsBadge('ok');
+        } else {
+          showSheetsTestResult('⚠ Script responde: ' + (data.message || 'ok'), false);
+        }
+      } catch(e) {
+        showSheetsTestResult('❌ Error parsing JSON', false);
+      }
+    })
+    .catch(function(e) { 
+      showSheetsTestResult('❌ Error: ' + e.message, false); 
+    });
+}
+
+function showSheetsTestResult(msg, ok) {
+  var el = document.getElementById('sheetsTestResult');
+  el.style.display = 'block';
+  el.style.color = ok === true ? '#10B981' : ok === false ? '#EF4444' : '#94A3B8';
+  el.innerHTML = msg;
+}
+
+// ── Analytics — load from Sheets ──────────────────────────────────────────
+// Devuelve la lista de días desde Sheets (si está configurado) o desde el historial local
+function fetchDays() {
+  if (scriptURL) return fetch(scriptURL + '?action=days').then(function(r){ return r.json(); });
+  return Promise.resolve({ status: 'ok', days: getLocalDays() });
+}
+function fetchDay(day) {
+  if (scriptURL) return fetch(scriptURL + '?action=read&day=' + day).then(function(r){ return r.json(); });
+  return Promise.resolve({ status: 'ok', rows: getLocalDay(day) });
+}
+
+function loadAnalytics() {
+  document.getElementById('analyticsNoSheets').style.display = 'none';
+  document.getElementById('analyticsContent').style.display = 'block';
+  document.getElementById('refreshBtn').innerHTML = '<span class="spinner"></span>Cargando...';
+
+  fetchDays()
+    .then(function(data) {
+      var days = data.days || [];
+      renderDaySelector(days);
+      if ((!selectedDay || days.indexOf(selectedDay) < 0) && days.length > 0) {
+        selectedDay = days[0];
+      }
+      if (selectedDay) loadDayData(selectedDay);
+      else {
+        document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+        document.getElementById('historyList').innerHTML = '<div class="empty-state">No hay datos aún. Pulsa Connect → modo demo (o conecta el ESP32) para empezar a registrar.</div>';
+        renderStats([]); renderChart([]); renderInsights([]);
+      }
+    })
+    .catch(function() {
+      document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+      document.getElementById('historyList').innerHTML = '<div class="empty-state" style="color:#EF4444">❌ Error conectando a Sheets. Verifica la URL en Settings.</div>';
+    });
+}
+
+function renderDaySelector(days) {
+  var sel = document.getElementById('daySelector');
+  if (days.length === 0) { sel.innerHTML = '<span style="font-size:12px;color:#475569">Sin días registrados</span>'; return; }
+  sel.innerHTML = '';
+  days.forEach(function(d) {
+    var chip = document.createElement('button');
+    chip.className = 'day-chip' + (d === selectedDay ? ' active' : '');
+    chip.textContent = formatDayLabel(d);
+    chip.onclick = function() {
+      selectedDay = d;
+      document.querySelectorAll('.day-chip').forEach(function(c){c.classList.remove('active')});
+      chip.classList.add('active');
+      loadDayData(d);
+    };
+    sel.appendChild(chip);
+  });
+}
+
+function formatDayLabel(dateStr) {
+  // "2025-01-15" → "15 ene"
+  var parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  var months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return parts[2] + ' ' + months[parseInt(parts[1])-1];
+}
+
+function loadDayData(day) {
+  document.getElementById('historyTitle').textContent = 'Historial — ' + day;
+  document.getElementById('historyList').innerHTML = '<div class="empty-state"><span class="spinner"></span>Cargando...</div>';
+
+  fetchDay(day)
+    .then(function(data) {
+      document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+      renderHistory(data.rows || []);
+      renderStats(data.rows || []);
+      renderChart(data.rows || []);
+      renderInsights(data.rows || []);
+    })
+    .catch(function() {
+      document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+      document.getElementById('historyList').innerHTML = '<div class="empty-state" style="color:#EF4444">❌ Error cargando datos</div>';
+    });
+}
+
+function renderHistory(rows) {
+  var list = document.getElementById('historyList');
+  if (!rows.length) { list.innerHTML = '<div class="empty-state">Sin lecturas para este día</div>'; return; }
+  // Mostrar últimas 30
+  var recent = rows.slice(-30).reverse();
+  list.innerHTML = '';
+  recent.forEach(function(r) {
+    var isHigh = r.back >= pressureThreshold || r.bottom >= pressureThreshold;
+    var div = document.createElement('div');
+    div.className = 'history-item ' + (isHigh ? 'hi' : 'ok');
+    div.innerHTML =
+      '<div class="history-time">' + r.time + '</div>' +
+      '<div class="history-vals">' +
+        '<span style="color:#93C5FD">B:' + r.back + '</span> ' +
+        '<span style="color:#06B6D4">S:' + r.bottom + '</span> ' +
+        '<span style="color:#94A3B8;font-size:10px">X:' + r.gyroX + ' Y:' + r.gyroY + '</span>' +
+      '</div>' +
+      '<div style="font-size:10px">' + (isHigh ? '🔴' : '✅') + '</div>';
+    list.appendChild(div);
+  });
+}
+
+function renderStats(rows) {
+  if (!rows.length) {
+    document.getElementById('stat-posture').textContent = '--%';
+    document.getElementById('stat-back').textContent = '---';
+    document.getElementById('stat-bottom').textContent = '---';
+    return;
+  }
+  var backAvg   = Math.round(rows.reduce(function(s,r){return s+r.back},0)   / rows.length);
+  var btAvg     = Math.round(rows.reduce(function(s,r){return s+r.bottom},0) / rows.length);
+  var goodCount = rows.filter(function(r){return r.back < pressureThreshold && r.bottom < pressureThreshold}).length;
+  var goodPct   = Math.round(goodCount / rows.length * 100);
+  document.getElementById('stat-posture').textContent = goodPct + '%';
+  document.getElementById('stat-posture').style.color = goodPct >= 60 ? '#10B981' : '#EF4444';
+  document.getElementById('stat-back').textContent    = backAvg;
+  document.getElementById('stat-back').style.color    = backAvg >= pressureThreshold ? '#EF4444' : '#93C5FD';
+  document.getElementById('stat-bottom').textContent  = btAvg;
+  document.getElementById('stat-bottom').style.color  = btAvg >= pressureThreshold ? '#EF4444' : '#06B6D4';
+}
+
+function renderChart(rows) {
+  var chartEl = document.getElementById('chartBars');
+  if (!rows.length) { chartEl.innerHTML = '<div class="empty-state" style="padding:10px 0">Sin datos</div>'; return; }
+  // Agrupar en hasta 8 bloques por hora
+  var grouped = {};
+  rows.forEach(function(r) {
+    var hour = r.time ? r.time.split(':')[0] + 'h' : '?';
+    if (!grouped[hour]) grouped[hour] = {backSum:0, btSum:0, count:0};
+    grouped[hour].backSum += r.back;
+    grouped[hour].btSum   += r.bottom;
+    grouped[hour].count++;
+  });
+  var keys = Object.keys(grouped).slice(-8);
+  chartEl.innerHTML = '';
+  keys.forEach(function(k) {
+    var g   = grouped[k];
+    var bA  = Math.round(g.backSum / g.count);
+    var btA = Math.round(g.btSum   / g.count);
+    var bh  = Math.max(4, Math.round(bA/1023*80));
+    var bth = Math.max(4, Math.round(btA/1023*80));
+    chartEl.innerHTML +=
+      '<div class="bar-group">' +
+        '<div class="bar-wrap">' +
+          '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>' +
+          '<div class="bar" style="height:'+bth+'px;background:'+(btA>=pressureThreshold?'#DC2626':'#06B6D4')+'"></div>' +
+        '</div>' +
+        '<div class="bar-lbl">'+k+'</div>' +
+      '</div>';
+  });
+}
+
+// Consejos de postura calculados con los datos reales del día
+function renderInsights(rows) {
+  var el = document.getElementById('insights');
+  if (!rows.length) { el.innerHTML = '<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>'; return; }
+  var backAvg = Math.round(rows.reduce(function(s,r){return s+r.back},0) / rows.length);
+  var btAvg   = Math.round(rows.reduce(function(s,r){return s+r.bottom},0) / rows.length);
+  var good    = rows.filter(function(r){return r.back < pressureThreshold && r.bottom < pressureThreshold}).length;
+  var gp      = Math.round(good / rows.length * 100);
+  function tip(icon, text) { return '<div class="tip-row"><span class="tip-icon">' + icon + '</span><span class="tip-text">' + text + '</span></div>'; }
+  var html = '';
+  html += tip(gp >= 70 ? '✅' : '⚠️', gp >= 70
+    ? 'Buena postura mantenida el ' + (gp) + '% del tiempo. ¡Sigue así!'
+    : 'Postura correcta solo el ' + gp + '% del tiempo. Toma descansos cada 30 min para pararte y estirar.');
+  html += tip(backAvg < pressureThreshold ? '✅' : '🔴', backAvg < pressureThreshold
+    ? 'La presión en la espalda está en rango normal.'
+    : 'Presión alta en la espalda. Ajusta la altura del asiento y el soporte lumbar.');
+  html += tip(btAvg < pressureThreshold ? '✅' : '🔴', btAvg < pressureThreshold
+    ? 'La presión en el asiento está equilibrada.'
+    : 'Presión alta en el asiento. Usa un cojín o cambia tu posición al sentarte.');
+  el.innerHTML = html;
+}
+
+// ── Settings ───────────────────────────────────────────────────────────────
+function toggleBuzzer() { document.getElementById('buzzerSwitch').classList.toggle('on'); }
+
+function onThreshInput() {
+  var v = parseInt(document.getElementById('pressureThresh').value) || 700;
+  document.getElementById('curThresh').textContent = v;
+  document.getElementById('threshLabel').textContent = v>=700 ? 'Strict' : v>=400 ? 'Moderate' : 'Relaxed';
+}
+
+function saveSettings() {
+  var v   = parseInt(document.getElementById('pressureThresh').value) || 700;
+  var url = document.getElementById('scriptURL').value.trim();
+  pressureThreshold = Math.max(0, Math.min(1023, v));
+  scriptURL = url;
+  localStorage.setItem('threshold', pressureThreshold);
+  localStorage.setItem('scriptURL', url);
+  if (url) updateSheetsBadge('checking');
+  var btn = document.getElementById('saveBtn');
+  btn.textContent = '✓ Saved!'; btn.style.background = '#059669';
+  setTimeout(function(){ btn.textContent='Save configuration'; btn.style.background='#10B981'; }, 2000);
+  // Activar guardado automático si hay conexión activa
+  if (connected && url && !saveInterval) {
+    saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
+  }
+  // ==================== NUEVA FUNCIÓN: ENVIAR PESO ====================
+function enviarPeso() {
+  var peso = parseFloat(document.getElementById('pesoInput').value);
+  if (!peso || peso <= 0) {
+    alert('Ingresa un peso válido');
+    return;
+  }
+  
+  if(connMode === 'bt' && bleChar) {
+    var data = "PESO=" + peso + "\n";
+    var bytes = new TextEncoder().encode(data);
+    bleChar.writeValue(bytes).then(function() {
+      alert('Peso enviado: ' + peso + ' kg');
+    }).catch(function(e) {
+      alert('Error: ' + e.message);
+    });
+  } else {
+    alert('Peso registrado: ' + peso + ' kg (demo)');
+  }
+}
+}
+</script>
+</body>
+</html>
