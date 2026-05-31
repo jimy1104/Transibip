@@ -435,14 +435,17 @@ function openModal() {
 function connectBLE() {
   var err = document.getElementById('bleError');
   err.style.display = 'none';
+  
   if (!navigator.bluetooth) {
-    err.textContent = 'Este navegador no soporta Bluetooth. Usa Chrome en Android.';
+    err.textContent = 'Bluetooth no disponible. Usa Chrome en Android.';
     err.style.display = 'block';
     return;
   }
+  
+  // CAMBIAR ESTO - buscar por servicios disponibles
   navigator.bluetooth.requestDevice({
-    filters: [{ namePrefix: 'TRANSIBIP' }],  // MAYÚSCULAS - CORREGIDO
-    optionalServices: [BLE_SERVICE]
+    acceptAllDevices: true,  // ← CAMBIAR ESTO
+    optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
   })
   .then(function(device) {
     bleDevice = device;
@@ -451,7 +454,10 @@ function connectBLE() {
   })
   .then(function(server) { return server.getPrimaryService(BLE_SERVICE); })
   .then(function(service) { return service.getCharacteristic(BLE_TX); })
-  .then(function(ch) { bleChar = ch; return ch.startNotifications(); })
+  .then(function(ch) {
+    bleChar = ch;
+    return ch.startNotifications();
+  })
   .then(function() {
     bleChar.addEventListener('characteristicvaluechanged', onBleData);
     doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
@@ -461,7 +467,6 @@ function connectBLE() {
     err.style.display = 'block';
   });
 }
-
 // El ESP32 envía una línea CSV: "back,bottom,gyroX,gyroY"
 function onBleData(event) {
   var txt = new TextDecoder().decode(event.target.value).trim();
