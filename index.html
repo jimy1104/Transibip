@@ -405,7 +405,7 @@ var BLE_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 → app (notify)
   
     return;
-  }
+  
 
   // CAMBIAR ESTO - buscar por servicios disponibles
   // Solicitar dispositivo
@@ -445,7 +445,7 @@ var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 → app (noti
     err.textContent = 'Error: ' + e.message;
     err.style.display = 'block';
   });
-}
+
 // El ESP32 envía una línea CSV: "back,bottom,gyroX,gyroY"
 function onBleData(event) {
   var txt = new TextDecoder().decode(event.target.value).trim();
@@ -907,11 +907,14 @@ function enviarPeso() {
   }
 }
 }
-}
+
 </script>
 </body>
 </html>
 
+
+
+        
 
 
         
