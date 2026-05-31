@@ -432,6 +432,7 @@ function openModal() {
 }
 
 // ── Web Bluetooth (conexión real al ESP32) ──────────────────────────────────
+// === BLUETOOTH - CORREGIDO ===
 function connectBLE() {
   var err = document.getElementById('bleError');
   err.style.display = 'none';
@@ -464,19 +465,19 @@ function connectBLE() {
   })
   .then(function() {
     bleChar.addEventListener('characteristicvaluechanged', onBleData);
-    // OBTENER RX PARA ENVIAR PESO
     return bleService.getCharacteristic(BLE_RX);
   })
   .then(function(rxChar) {
     bleRxChar = rxChar;
-    // En la función connectBLE(), después de bleRxChar = rxChar;, agrega:
-console.log("RX Characteristic obtained:", bleRxChar.uuid);
-console.log("Puede escribir:", bleRxChar.properties.write);
+    console.log("✓ RX disponible");
+    console.log("  UUID:", rxChar.uuid);
+    console.log("  canWrite:", rxChar.properties.write);
     doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
   })
   .catch(function(e) {
     err.textContent = 'Error: ' + e.message;
     err.style.display = 'block';
+    console.error("BLE Error:", e);
   });
 }
 // El ESP32 envía una línea CSV: "back,bottom,gyroX,gyroY"
@@ -921,7 +922,7 @@ function saveSettings() {
   if (connected && url && !saveInterval) {
     saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
   }
-  // ==================== NUEVA FUNCIÓN: ENVIAR PESO ====================
+// === ENVIAR PESO - CORREGIDO ===
 function enviarPeso() {
   var peso = parseFloat(document.getElementById('pesoInput').value);
   if (!peso || peso <= 0) {
@@ -931,12 +932,28 @@ function enviarPeso() {
   
   if (connMode === 'bt' && bleRxChar) {
     var data = "PESO=" + peso;
-    bleRxChar.writeValue(new TextEncoder().encode(data)).then(function() {
-      alert('✓ Peso enviado: ' + peso + ' kg');
-    }).catch(function(e) {
+    console.log("Intentando enviar:", data);
+    
+    try {
+      // Convertir a bytes
+      var bytes = new TextEncoder().encode(data);
+      console.log("Bytes:", Array.from(bytes));
+      
+      // Escribir directamente
+      bleRxChar.writeValue(bytes).then(function() {
+        console.log("✓ Escritura exitosa");
+        alert('✓ Enviado: ' + peso + ' kg');
+      }).catch(function(e) {
+        console.error("Error writeValue:", e);
+        alert('Error al enviar: ' + e.message);
+      });
+      
+    } catch(e) {
+      console.error("Error try:", e);
       alert('Error: ' + e.message);
-    });
+    }
   } else {
+    console.log("Modo demo - no hay BLE conectado");
     alert('Peso (demo): ' + peso + ' kg');
   }
 }
