@@ -912,22 +912,15 @@ function saveSettings() {
   // ==================== NUEVA FUNCIÓN: ENVIAR PESO ====================
 function enviarPeso() {
   var peso = parseFloat(document.getElementById('pesoInput').value);
-  if (!peso || peso <= 0) {
-    alert('Ingresa un peso válido');
-    return;
-  }
+  if(!peso || peso <= 0) { alert('Ingresa un peso válido'); return; }
   
   if(connMode === 'bt' && bleChar) {
     var data = "PESO=" + peso + "\n";
     var bytes = new TextEncoder().encode(data);
-    bleChar.writeValue(bytes).then(function() {
-      alert('Peso enviado: ' + peso + ' kg');
-    }).catch(function(e) {
-      alert('Error: ' + e.message);
-    });
-  } else {
-    alert('Peso registrado: ' + peso + ' kg (demo)');
+    bleChar.writeValue(bytes);  // ← Enviar al ESP32
   }
+  alert('Peso enviado: ' + peso + ' kg');
+
 }
 }
 </script>
