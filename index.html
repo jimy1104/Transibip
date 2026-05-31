@@ -397,11 +397,7 @@ var BLE_RX     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';// UUIDs del servicio No
 // ── Init ───────────────────────────────────────────────────────────────────
 window.onload = function() {
   scriptURL = localStorage.getItem('scriptURL') || '';
-  pressureThreshold = parseInt(localStorage.getItem('threshold') || '700');
   document.getElementById('scriptURL').value = scriptURL;
-  document.getElementById('pressureThresh').value = pressureThreshold;
-  document.getElementById('curThresh').textContent = pressureThreshold;
-  if (scriptURL) updateSheetsBadge('checking'); else updateSheetsBadge('off');
 };
 
 // ── Tabs ───────────────────────────────────────────────────────────────────
@@ -898,11 +894,8 @@ function onThreshInput() {
 }
 
 function saveSettings() {
-  var v   = parseInt(document.getElementById('pressureThresh').value) || 700;
   var url = document.getElementById('scriptURL').value.trim();
-  pressureThreshold = Math.max(0, Math.min(1023, v));
   scriptURL = url;
-  localStorage.setItem('threshold', pressureThreshold);
   localStorage.setItem('scriptURL', url);
   if (url) updateSheetsBadge('checking');
   var btn = document.getElementById('saveBtn');
@@ -912,6 +905,7 @@ function saveSettings() {
   if (connected && url && !saveInterval) {
     saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
   }
+}
 // === ENVIAR PESO - CORREGIDO ===
 function enviarPeso() {
   var peso = parseFloat(document.getElementById('pesoInput').value);
@@ -945,7 +939,9 @@ function enviarPeso() {
     alert('Peso (demo): ' + peso + ' kg');
   }
 }
-}
+
 </script>
 </body>
+</html>
+
 </html>
