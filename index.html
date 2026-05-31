@@ -469,6 +469,9 @@ function connectBLE() {
   })
   .then(function(rxChar) {
     bleRxChar = rxChar;
+    // En la función connectBLE(), después de bleRxChar = rxChar;, agrega:
+console.log("RX Characteristic obtained:", bleRxChar.uuid);
+console.log("Puede escribir:", bleRxChar.properties.write);
     doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
   })
   .catch(function(e) {
@@ -927,15 +930,14 @@ function enviarPeso() {
   }
   
   if (connMode === 'bt' && bleRxChar) {
-    var data = "PESO=" + peso + "\n";
-    var bytes = new TextEncoder().encode(data);
-    bleRxChar.writeValue(bytes).then(function() {
-      alert('Peso enviado: ' + peso + ' kg');
+    var data = "PESO=" + peso;
+    bleRxChar.writeValue(new TextEncoder().encode(data)).then(function() {
+      alert('✓ Peso enviado: ' + peso + ' kg');
     }).catch(function(e) {
       alert('Error: ' + e.message);
     });
   } else {
-    alert('Peso guardado (demo): ' + peso + ' kg');
+    alert('Peso (demo): ' + peso + ' kg');
   }
 }
 }
