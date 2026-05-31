@@ -176,7 +176,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     <!-- PESO DEL PACIENTE - NUEVO -->
     <div class="peso-card" id="pesoCard" style="display:none">
       <div class="peso-label">PESO DEL PACIENTE (KG)</div>
-      <input type="number" class="peso-input" id=" pesoInput" placeholder="0" inputmode="numeric">
+      <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
       <button class="btn btn-primary" onclick="enviarPeso()">ENVIAR PESO AL ESP32</button>
     </div>
 
@@ -399,11 +399,11 @@ var selectedDay = '';
 var sheetsOk = false;
 var saveInterval = null;      // registrar lecturas cada 3s
 var connMode = 'demo';        // 'demo' | 'bt' | 'wifi'
-var bleDevice = null, bleChar = null;  // Web Bluetooth
-// UUIDs del servicio Nordic UART (deben coincidir con el código del ESP32)
+var bleDevice = null, bleChar = null, bleRxChar = null, bleService = null;
+// UUIDs del servicio Nordic UART
 var BLE_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 → app (notify)
-
+var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+var BLE_RX     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';// UUIDs del servicio Nordic UART (deben coincidir con el código del ESP32)
 // ── Init ───────────────────────────────────────────────────────────────────
 window.onload = function() {
   scriptURL = localStorage.getItem('scriptURL') || '';
@@ -442,24 +442,33 @@ function connectBLE() {
     return;
   }
 
-  // CAMBIAR ESTO - buscar por servicios disponibles
   navigator.bluetooth.requestDevice({
-    acceptAllDevices: true,  // ← CAMBIAR ESTO
-    optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
+    acceptAllDevices: true,
+    optionalServices: [BLE_SERVICE]
   })
   .then(function(device) {
     bleDevice = device;
     device.addEventListener('gattserverdisconnected', onBleDisconnect);
     return device.gatt.connect();
   })
-  .then(function(server) { return server.getPrimaryService(BLE_SERVICE); })
-  .then(function(service) { return service.getCharacteristic(BLE_TX); })
+  .then(function(server) {
+    return server.getPrimaryService(BLE_SERVICE);
+  })
+  .then(function(service) {
+    bleService = service;
+    return service.getCharacteristic(BLE_TX);
+  })
   .then(function(ch) {
     bleChar = ch;
     return ch.startNotifications();
   })
   .then(function() {
     bleChar.addEventListener('characteristicvaluechanged', onBleData);
+    // OBTENER RX PARA ENVIAR PESO
+    return bleService.getCharacteristic(BLE_RX);
+  })
+  .then(function(rxChar) {
+    bleRxChar = rxChar;
     doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
   })
   .catch(function(e) {
@@ -916,26 +925,20 @@ function enviarPeso() {
     alert('Ingresa un peso válido');
     return;
   }
-  if(!peso || peso <= 0) { alert('Ingresa un peso válido'); return; }
-
-  if(connMode === 'bt' && bleChar) {
+  
+  if (connMode === 'bt' && bleRxChar) {
     var data = "PESO=" + peso + "\n";
     var bytes = new TextEncoder().encode(data);
-    bleChar.writeValue(bytes).then(function() {
+    bleRxChar.writeValue(bytes).then(function() {
       alert('Peso enviado: ' + peso + ' kg');
     }).catch(function(e) {
       alert('Error: ' + e.message);
     });
   } else {
-    alert('Peso registrado: ' + peso + ' kg (demo)');
-    bleChar.writeValue(bytes);  // ← Enviar al ESP32
+    alert('Peso guardado (demo): ' + peso + ' kg');
   }
-  alert('Peso enviado: ' + peso + ' kg');
-
 }
 }
 </script>
 </body>
 </html>
-
-        
