@@ -22,8 +22,6 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .btn{border:none;border-radius:10px;padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
 .btn-primary{background:#10B981;color:#fff}
 .btn-secondary{background:#1E293B;color:#94A3B8;border:1px solid #334155}
-.btn-danger{background:#2D1010;color:#EF4444;border:1px solid #EF4444}
-.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px;width:auto;margin-top:0}
 .row{display:flex;align-items:center;justify-content:space-between}
 .dot{width:8px;height:8px;border-radius:50%}
 .dot-green{background:#10B981}
@@ -43,18 +41,31 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .no-conn{background:#1E293B;border:1px dashed #334155;border-radius:10px;padding:20px;text-align:center;margin-bottom:12px}
 .connect-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;border:1px solid #334155;background:#1E293B;cursor:pointer;font-size:13px;font-weight:600;color:#94A3B8}
 .connect-btn.on{border-color:#10B981;background:#0F4C2D;color:#10B981}
+.period-row{display:flex;background:#1E293B;border-radius:10px;padding:4px;margin-bottom:16px;gap:2px}
+.period-btn{flex:1;padding:7px;border:none;background:transparent;color:#94A3B8;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer}
+.period-btn.active{background:#10B981;color:#fff}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-card{background:#1E293B;border:1px solid #1E3A5F;border-radius:10px;padding:10px;text-align:center}
+.stat-num{font-size:20px;font-weight:700}
+.stat-label{font-size:10px;color:#94A3B8;margin-top:3px}
+.bars{display:flex;align-items:flex-end;height:90px;gap:4px}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center}
+.bar-wrap{display:flex;align-items:flex-end;height:80px;gap:2px;width:100%}
+.bar{flex:1;border-radius:2px;min-height:3px}
+.bar-lbl{font-size:9px;color:#94A3B8;margin-top:4px}
+.legend-row{display:flex;gap:12px;margin-top:8px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#94A3B8}
+.legend-dot{width:8px;height:8px;border-radius:2px}
 .switch{width:46px;height:26px;background:#334155;border-radius:13px;position:relative;cursor:pointer;border:none;transition:.2s}
 .switch.on{background:#10B981}
 .switch::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s}
 .switch.on::after{left:23px}
 .input-field{background:#0F172A;border:1px solid #334155;border-radius:8px;padding:11px 12px;color:#F1F5F9;font-size:14px;width:100%;margin-bottom:8px}
-.input-field:focus{outline:none;border-color:#10B981}
 .fsr-card{background:#1E293B;border-radius:12px;border:1px solid #1E3A5F;padding:14px;margin-bottom:12px}
 .fsr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .fsr-title{font-size:12px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.5px}
 .fsr-led{width:14px;height:14px;border-radius:50%;border:2px solid #EF4444;background:#1E293B;transition:.3s}
 .fsr-led.on{background:#EF4444;box-shadow:0 0 8px #EF4444}
-/* Modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10;display:none;align-items:flex-end;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:#1E293B;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:430px}
@@ -62,16 +73,19 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .conn-method-row{display:flex;gap:8px;margin-bottom:16px}
 .conn-method-btn{flex:1;padding:11px;border-radius:10px;border:1px solid #334155;background:#0F172A;color:#94A3B8;font-size:13px;font-weight:600;cursor:pointer;text-align:center}
 .conn-method-btn.active{border-color:#10B981;color:#10B981;background:#0A2A1F}
+.device-item{display:flex;align-items:center;gap:12px;padding:13px;background:#0F172A;border-radius:10px;margin-bottom:8px;cursor:pointer;border:1px solid transparent}
+.device-icon{width:42px;height:42px;border-radius:50%;background:#1E293B;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .wifi-form{display:none}
 .wifi-form.show{display:block}
 .bt-list{display:none}
 .bt-list.show{display:block}
-/* Sheets badge */
+.scanning{text-align:center;padding:20px 0;color:#94A3B8;font-size:13px}
+/* Sheets status badge */
 .sheets-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:10px}
 .sheets-badge.ok{background:#0A2A1F;border:1px solid #10B981;color:#10B981}
 .sheets-badge.err{background:#2D1010;border:1px solid #EF4444;color:#EF4444}
 .sheets-badge.off{background:#1E293B;border:1px solid #334155;color:#94A3B8}
-/* History */
+/* History list */
 .history-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#0F172A;border-radius:8px;margin-bottom:6px;border-left:3px solid #334155}
 .history-item.hi{border-left-color:#EF4444}
 .history-item.ok{border-left-color:#10B981}
@@ -87,41 +101,17 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .tip-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}
 .tip-icon{font-size:15px;flex-shrink:0;margin-top:1px}
 .tip-text{font-size:12px;color:#94A3B8;line-height:1.6}
-.stat-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-.stat-card{background:#1E293B;border:1px solid #1E3A5F;border-radius:10px;padding:10px;text-align:center}
-.stat-num{font-size:20px;font-weight:700}
-.stat-label{font-size:10px;color:#94A3B8;margin-top:3px}
-.bars{display:flex;align-items:flex-end;height:90px;gap:4px}
-.bar-group{flex:1;display:flex;flex-direction:column;align-items:center}
-.bar-wrap{display:flex;align-items:flex-end;height:80px;gap:2px;width:100%}
-.bar{flex:1;border-radius:2px;min-height:3px}
-.bar-lbl{font-size:9px;color:#94A3B8;margin-top:4px}
-.legend-row{display:flex;gap:12px;margin-top:8px}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#94A3B8}
-.legend-dot{width:8px;height:8px;border-radius:2px}
-/* ── PATIENT styles ───────────────────────────────────── */
-.patient-banner{display:none;background:#0D1F3C;border:1px solid #3B82F6;border-radius:10px;padding:10px 14px;margin-bottom:12px;flex-direction:row;align-items:center;gap:10px}
-.patient-avatar{width:36px;height:36px;border-radius:50%;background:#1E3A5F;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.patient-name-big{font-size:14px;font-weight:700;color:#F1F5F9}
-.patient-meta{font-size:11px;color:#94A3B8;margin-top:2px}
-.patient-card{background:#1E293B;border-radius:12px;border:1px solid #1E3A5F;padding:14px;margin-bottom:12px;cursor:pointer;transition:.15s}
-.patient-card:hover{border-color:#3B82F6}
-.patient-card.active-patient{border-color:#10B981;background:#0A1F18}
-.patient-card-name{font-size:14px;font-weight:600;color:#F1F5F9}
-.patient-card-meta{font-size:11px;color:#94A3B8;margin-top:3px}
-.patient-card-sessions{font-size:11px;color:#10B981;font-weight:600}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
-.badge-blue{background:#1E3A5F;color:#93C5FD}
-.badge-green{background:#0A2A1F;color:#10B981}
-.search-box{position:relative;margin-bottom:12px}
-.search-box input{padding-left:36px}
-.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#475569;font-size:14px}
+.peso-card{background:#0F172A;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:12px}
+.peso-label{font-size:12px;color:#94A3B8;margin-bottom:6px}
+.peso-input{background:#1E293B;border:1px solid #334155;border-radius:8px;padding:12px;color:#10B981;font-size:24px;font-weight:600;text-align:center;width:100%;margin-bottom:8px}
+.peso-input:focus{outline:none;border-color:#10B981}
+
 </style>
 </head>
 <body>
 <div class="app" id="app">
 
-  <!-- ── Connect Modal ──────────────────────────────────────── -->
+  <!-- Connect Modal -->
   <div class="modal-bg" id="connModal">
     <div class="modal">
       <div class="row" style="margin-bottom:16px">
@@ -139,6 +129,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         <button class="btn btn-primary" onclick="connectBLE()" style="margin-top:0">🔌 Conectar por Bluetooth</button>
         <div style="font-size:11px;color:#94A3B8;margin:12px 0;text-align:center">— o —</div>
         <button class="btn btn-secondary" onclick="doConnect('Demo (simulado)','demo')">▶️ Probar en modo demo</button>
+        <div style="font-size:10px;color:#475569;margin-top:10px;line-height:1.5">El modo demo genera datos de prueba para ver la app funcionando sin el ESP32. El Bluetooth real requiere Chrome en Android y el dispositivo encendido.</div>
         <div id="bleError" style="color:#EF4444;font-size:12px;margin-top:8px;display:none"></div>
       </div>
       <div class="wifi-form" id="wifiForm">
@@ -146,7 +137,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         <input class="input-field" id="wifiSSID" placeholder="e.g. TransiBip-ESP32">
         <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Password</div>
         <input class="input-field" id="wifiPass" type="password" placeholder="WiFi password">
-        <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">ESP32 IP (opcional)</div>
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">ESP32 IP address (optional)</div>
         <input class="input-field" id="wifiIP" placeholder="e.g. 192.168.1.100" style="margin-bottom:12px">
         <div id="wifiError" style="color:#EF4444;font-size:12px;margin-bottom:8px;display:none"></div>
         <button class="btn btn-primary" id="wifiConnBtn" onclick="doWifiConnect()" style="margin-top:0">Connect via WiFi</button>
@@ -154,32 +145,10 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     </div>
   </div>
 
-  <!-- ── Patient Modal (nuevo / editar) ────────────────────── -->
-  <div class="modal-bg" id="patientModal">
-    <div class="modal">
-      <div class="row" style="margin-bottom:16px">
-        <div style="font-size:17px;font-weight:700;color:#F1F5F9" id="patientModalTitle">Nuevo paciente</div>
-        <button class="modal-close" onclick="closePatientModal()">✕</button>
-      </div>
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Nombre completo *</div>
-      <input class="input-field" id="pName" placeholder="Ej. Juan García López">
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Edad</div>
-      <input class="input-field" id="pAge" type="number" placeholder="Ej. 35" min="1" max="120">
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Diagnóstico / nota</div>
-      <input class="input-field" id="pDiag" placeholder="Ej. Dolor lumbar crónico">
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Terapeuta</div>
-      <input class="input-field" id="pTherapist" placeholder="Ej. Dra. Martínez">
-      <div id="patientModalError" style="color:#EF4444;font-size:12px;margin-bottom:8px;display:none"></div>
-      <button class="btn btn-primary" onclick="savePatient()" style="margin-top:4px">Guardar paciente</button>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════
-       MONITOR SCREEN
-  ══════════════════════════════════════════════════════════ -->
+  <!-- MONITOR -->
   <div class="screen active" id="s-monitor">
     <div style="padding-top:env(safe-area-inset-top,12px)"></div>
-    <div class="row" style="margin-bottom:12px">
+    <div class="row" style="margin-bottom:18px">
       <div>
         <div class="screen-title">TransiBip</div>
         <div style="font-size:12px;color:#94A3B8">Real-time monitoring</div>
@@ -190,41 +159,29 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       </button>
     </div>
 
-    <!-- Patient banner (visible cuando hay paciente activo) -->
-    <div id="patientBanner" class="patient-banner">
-      <div class="patient-avatar">👤</div>
-      <div style="flex:1">
-        <div class="patient-name-big" id="bannerName">—</div>
-        <div class="patient-meta" id="bannerMeta">—</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="showTab('patients',document.querySelectorAll('.tab')[1])">Cambiar</button>
-    </div>
-
-    <!-- No patient selected warning -->
-    <div id="noPatientWarn" style="background:#1A1200;border:1px solid #F59E0B;border-radius:10px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:18px">⚠️</span>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:600;color:#F59E0B">Sin paciente seleccionado</div>
-        <div style="font-size:11px;color:#94A3B8">Los datos se guardarán sin nombre asociado</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="showTab('patients',document.querySelectorAll('.tab')[1])">Seleccionar</button>
-    </div>
-
-    <div class="no-conn" id="noBanner">
+     <div class="no-conn" id="noBanner">
       <div style="font-size:28px;margin-bottom:8px">📡</div>
       <div style="font-size:13px;color:#94A3B8">Tap Connect to pair with your ESP32 device</div>
     </div>
 
     <div id="greenLedBar" style="display:none;background:#0A2A1F;border:1px solid #10B981;border-radius:10px;padding:11px 14px;margin-bottom:12px;flex-direction:row;align-items:center;gap:10px">
-      <div style="width:14px;height:14px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;flex-shrink:0"></div>
+      <div style="width:14px;height:14px;border-radius:50%;background:#10B981;border:2px solid #10B981;box-shadow:0 0 8px #10B981;flex-shrink:0"></div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:#10B981" id="connDeviceName">TransiBip ESP32</div>
+        <div style="font-size:13px;font-weight:600;color:#10B981" id="connDeviceName">TRANSIBIP</div>
         <div style="font-size:11px;color:#94A3B8" id="connMethodLabel">Connected via Bluetooth</div>
       </div>
       <button onclick="doDisconnect()" style="background:none;border:1px solid #334155;color:#94A3B8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer">Disconnect</button>
     </div>
 
-    <div id="sheetsBadge" class="sheets-badge off">💾 Historial local activo</div>
+    <!-- PESO DEL PACIENTE - NUEVO -->
+    <div class="peso-card" id="pesoCard" style="display:none">
+      <div class="peso-label">PESO DEL PACIENTE (KG)</div>
+      <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
+      <button class="btn btn-primary" onclick="enviarPeso()">ENVIAR PESO AL ESP32</button>
+    </div>
+
+    <!-- Sheets status -->
+    <div id="sheetsBadge" class="sheets-badge off">🗂️ Google Sheets: no configurado</div>
 
     <!-- Back muscles -->
     <div class="card">
@@ -300,81 +257,45 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       PATIENTS SCREEN  ← NUEVA
-  ══════════════════════════════════════════════════════════ -->
-  <div class="screen" id="s-patients">
-    <div style="padding-top:env(safe-area-inset-top,12px)"></div>
-    <div class="row" style="margin-bottom:4px">
-      <div class="screen-title">Pacientes</div>
-      <button class="btn btn-primary btn-sm" onclick="openPatientModal()">+ Nuevo</button>
-    </div>
-    <div class="screen-sub">Selecciona o registra un paciente para la sesión</div>
-
-    <!-- Search -->
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input class="input-field" id="patientSearch" placeholder="Buscar por nombre…" oninput="renderPatientList()" style="margin-bottom:0;padding-left:36px">
-    </div>
-
-    <!-- Active patient highlight -->
-    <div id="activePatientCard" style="display:none;background:#0A1F18;border:1px solid #10B981;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;color:#10B981;font-weight:600;margin-bottom:8px">● PACIENTE ACTIVO</div>
-      <div class="row">
-        <div>
-          <div style="font-size:15px;font-weight:700;color:#F1F5F9" id="activePatientName">—</div>
-          <div style="font-size:11px;color:#94A3B8;margin-top:3px" id="activePatientMeta">—</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="clearActivePatient()">Deseleccionar</button>
-      </div>
-    </div>
-
-    <!-- Patient list -->
-    <div id="patientList"></div>
-
-    <div id="noPatients" style="display:none" class="empty-state">
-      <div style="font-size:32px;margin-bottom:10px">👤</div>
-      <div style="font-size:14px;color:#F1F5F9;margin-bottom:6px">Sin pacientes registrados</div>
-      <div style="font-size:12px">Toca "+ Nuevo" para agregar el primer paciente</div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════
-       ANALYTICS SCREEN
-  ══════════════════════════════════════════════════════════ -->
+  <!-- ANALYTICS (History from Sheets) -->
   <div class="screen" id="s-analytics">
     <div style="padding-top:env(safe-area-inset-top,12px)"></div>
     <div class="screen-title">Analytics</div>
-    <div class="screen-sub">Historial por paciente y día</div>
+    <div class="screen-sub">Historial guardado en el dispositivo (Google Sheets opcional)</div>
 
-    <!-- Patient filter -->
-    <div class="card" style="padding:12px">
-      <div class="card-title">Filtrar por paciente</div>
-      <select id="analyticsPatientFilter" class="input-field" style="margin-bottom:0" onchange="loadAnalytics()">
-        <option value="">— Todos los pacientes —</option>
-      </select>
+    <!-- No sheets configured -->
+    <div id="analyticsNoSheets" class="card" style="text-align:center;padding:24px">
+      <div style="font-size:28px;margin-bottom:8px">🗂️</div>
+      <div style="font-size:14px;font-weight:600;color:#F1F5F9;margin-bottom:6px">Google Sheets no configurado</div>
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:14px">Ve a Settings y pega la URL de tu Apps Script para ver el historial aquí.</div>
+      <button class="btn btn-secondary" onclick="showTab('settings',document.querySelectorAll('.tab')[2])" style="width:auto;padding:8px 20px;margin:0 auto">Ir a Settings</button>
     </div>
 
-    <div id="analyticsContent">
+    <div id="analyticsContent" style="display:none">
+      <!-- Stat cards -->
       <div class="stat-cards">
         <div class="stat-card"><div class="stat-num" id="stat-posture" style="color:#10B981">--%</div><div class="stat-label">Buena postura</div></div>
         <div class="stat-card"><div class="stat-num" id="stat-back" style="color:#93C5FD">---</div><div class="stat-label">Avg espalda</div></div>
         <div class="stat-card"><div class="stat-num" id="stat-bottom" style="color:#06B6D4">---</div><div class="stat-label">Avg asiento</div></div>
       </div>
 
+      <!-- Day selector -->
       <div style="font-size:11px;color:#94A3B8;margin-bottom:6px;font-weight:600">SELECCIONA UN DÍA</div>
       <div class="day-selector" id="daySelector"></div>
 
+      <!-- Refresh button -->
       <div class="row" style="gap:8px;margin-bottom:12px">
         <button class="btn btn-secondary" onclick="loadAnalytics()" id="refreshBtn" style="margin:0">🔄 Actualizar</button>
-        <button class="btn btn-secondary" onclick="if(confirm('¿Borrar historial?'))clearLocalHistory()" style="margin:0;max-width:130px">🗑 Borrar</button>
+        <button class="btn btn-secondary" onclick="if(confirm('¿Borrar el historial local?'))clearLocalHistory()" style="margin:0;max-width:130px">🗑️ Borrar</button>
       </div>
 
+      <!-- History list -->
       <div class="card">
         <div class="card-title" id="historyTitle">Historial del día</div>
         <div id="historyList"><div class="empty-state">Selecciona un día para ver los datos</div></div>
       </div>
 
+      <!-- Chart -->
       <div class="card">
         <div class="card-title">Presión promedio</div>
         <div class="bars" id="chartBars" style="height:80px"></div>
@@ -384,6 +305,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         </div>
       </div>
 
+      <!-- Insights / consejos -->
       <div class="card">
         <div class="card-title">Consejos de postura</div>
         <div id="insights"><div class="empty-state" style="padding:10px 0">Sin datos para analizar</div></div>
@@ -391,9 +313,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       SETTINGS SCREEN
-  ══════════════════════════════════════════════════════════ -->
+  <!-- SETTINGS -->
   <div class="screen" id="s-settings">
     <div style="padding-top:env(safe-area-inset-top,12px)"></div>
     <div class="screen-title">Settings</div>
@@ -410,13 +330,19 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       </div>
     </div>
 
+    <!-- Google Sheets config -->
     <div class="card">
-      <div class="card-title">🗂 Google Sheets</div>
-      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">Los datos se guardan incluyendo el nombre del paciente activo.</div>
+      <div class="card-title">🗂️ Google Sheets</div>
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">
+        Pega aquí la URL de tu Apps Script desplegado. Los datos del ESP32 se guardarán automáticamente separados por día.
+      </div>
       <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">URL del Apps Script</div>
       <input class="input-field" id="scriptURL" placeholder="https://script.google.com/macros/s/..." style="font-size:12px">
       <div id="sheetsTestResult" style="font-size:11px;margin-bottom:6px;display:none"></div>
-      <button class="btn btn-secondary" onclick="testSheetsConnection()" style="margin-top:4px">🔌 Probar conexión</button>
+      <button class="btn btn-secondary" onclick="testSheetsConnection()" style="margin-top:4px;margin-bottom:4px">🔌 Probar conexión</button>
+      <div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.5">
+        ¿No tienes el script? Abre Google Sheets → Extensiones → Apps Script → pega el código del archivo <b>postureguard_appscript.gs</b> → Implementar → Aplicación web → Cualquier usuario.
+      </div>
     </div>
 
     <div class="card">
@@ -433,23 +359,13 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     </div>
 
     <div class="card">
-      <div class="card-title">Pressure threshold</div>
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">Alert when pressure exceeds (0–1023)</div>
-      <input class="input-field" type="number" id="pressureThresh" value="700" min="0" max="1023" oninput="onThreshInput()">
-      <div class="row" style="margin-top:4px">
-        <span style="font-size:11px;color:#94A3B8">Current: <span id="curThresh">700</span></span>
-        <span style="font-size:11px;color:#10B981;font-weight:600" id="threshLabel">Strict</span>
-      </div>
-    </div>
-
-    <div class="card">
       <div class="card-title">Device info</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse">
         <tr><td style="color:#94A3B8;padding:5px 0">Board</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ESP32</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Back sensor</td><td style="text-align:right;color:#F1F5F9;font-weight:600">Celda HX711 50kg</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Seat sensor</td><td style="text-align:right;color:#F1F5F9;font-weight:600">Celda HX711 20kg</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (X/Y)</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Local + Google Sheets ☁️</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Google Sheets ☁️</td></tr>
       </table>
     </div>
 
@@ -457,277 +373,114 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     <div style="height:20px"></div>
   </div>
 
-  <!-- TAB BAR -->
   <div class="tabbar">
     <button class="tab active" onclick="showTab('monitor',this)"><span class="tab-icon">🫀</span><span class="tab-label">Monitor</span></button>
-    <button class="tab" onclick="showTab('patients',this)"><span class="tab-icon">👤</span><span class="tab-label">Pacientes</span></button>
     <button class="tab" onclick="showTab('analytics',this)"><span class="tab-icon">📊</span><span class="tab-label">Analytics</span></button>
     <button class="tab" onclick="showTab('settings',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Settings</span></button>
   </div>
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────
-var connected=false, pressureThreshold=700;
-var sensorInterval=null, gyroInterval=null, saveInterval=null;
+// ── State ──────────────────────────────────────────────────────────────────
+var connected=false, pressureThreshold=700, sensorInterval=null, gyroInterval=null;
 var backP=0, bottomP=0, gyroXv=0, gyroYv=0;
-var scriptURL='', selectedDay='', sheetsOk=false;
-var connMode='demo', bleDevice=null, bleChar=null;
-var BLE_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-var BLE_TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-
-// ── Patient State ──────────────────────────────────────────────────────
-var activePatientId = null;   // ID del paciente activo en la sesión actual
-var editingPatientId = null;  // ID del paciente que se está editando (null = nuevo)
-
-// ── Init ───────────────────────────────────────────────────────────────
+var scriptURL = localStorage.getItem('scriptURL') || '';
+var selectedDay = '';
+var sheetsOk = false;
+var saveInterval = null;      // registrar lecturas cada 3s
+var connMode = 'demo';        // 'demo' | 'bt' | 'wifi'
+var bleDevice = null, bleChar = null, bleRxChar = null, bleService = null;
+// UUIDs del servicio Nordic UART
+var BLE_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+var BLE_TX      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+var BLE_RX     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';// UUIDs del servicio Nordic UART (deben coincidir con el código del ESP32)
+// ── Init ───────────────────────────────────────────────────────────────────
 window.onload = function() {
   scriptURL = localStorage.getItem('scriptURL') || '';
-  pressureThreshold = parseInt(localStorage.getItem('threshold') || '700');
   document.getElementById('scriptURL').value = scriptURL;
-  document.getElementById('pressureThresh').value = pressureThreshold;
-  document.getElementById('curThresh').textContent = pressureThreshold;
-  updateSheetsBadge(scriptURL ? 'checking' : 'off');
-  // Cargar paciente activo guardado
-  activePatientId = localStorage.getItem('activePatientId') || null;
-  refreshPatientBanner();
 };
 
-// ── Tabs ───────────────────────────────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────────────────────────────
 function showTab(name, el) {
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
   document.getElementById('s-'+name).classList.add('active');
   el.classList.add('active');
-  if (name === 'analytics') { populatePatientFilter(); loadAnalytics(); }
-  if (name === 'patients') renderPatientList();
+  if (name === 'analytics') loadAnalytics();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// PATIENT MANAGEMENT
-// ══════════════════════════════════════════════════════════════════════
-
-function getPatients() {
-  try { return JSON.parse(localStorage.getItem('tb_patients') || '[]'); }
-  catch(e) { return []; }
-}
-function savePatients(arr) {
-  localStorage.setItem('tb_patients', JSON.stringify(arr));
-}
-function genId() {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-}
-
-function openPatientModal(patientId) {
-  editingPatientId = patientId || null;
-  var modal = document.getElementById('patientModal');
-  if (patientId) {
-    var pts = getPatients();
-    var p = pts.find(function(x){return x.id===patientId;});
-    if (p) {
-      document.getElementById('patientModalTitle').textContent = 'Editar paciente';
-      document.getElementById('pName').value      = p.name || '';
-      document.getElementById('pAge').value       = p.age  || '';
-      document.getElementById('pDiag').value      = p.diag || '';
-      document.getElementById('pTherapist').value = p.therapist || '';
-    }
-  } else {
-    document.getElementById('patientModalTitle').textContent = 'Nuevo paciente';
-    document.getElementById('pName').value = '';
-    document.getElementById('pAge').value  = '';
-    document.getElementById('pDiag').value = '';
-    document.getElementById('pTherapist').value = '';
-  }
-  document.getElementById('patientModalError').style.display = 'none';
-  modal.classList.add('open');
-  setTimeout(function(){ document.getElementById('pName').focus(); }, 200);
-}
-
-function closePatientModal() {
-  document.getElementById('patientModal').classList.remove('open');
-  editingPatientId = null;
-}
-
-function savePatient() {
-  var name = document.getElementById('pName').value.trim();
-  var err  = document.getElementById('patientModalError');
-  if (!name) {
-    err.textContent = 'El nombre es obligatorio';
-    err.style.display = 'block';
-    return;
-  }
-  var pts = getPatients();
-  var now = new Date().toISOString().split('T')[0];
-  if (editingPatientId) {
-    // Editar existente
-    pts = pts.map(function(p) {
-      if (p.id === editingPatientId) {
-        return Object.assign({}, p, {
-          name:       name,
-          age:        document.getElementById('pAge').value.trim(),
-          diag:       document.getElementById('pDiag').value.trim(),
-          therapist:  document.getElementById('pTherapist').value.trim()
-        });
-      }
-      return p;
-    });
-  } else {
-    // Nuevo paciente
-    pts.unshift({
-      id:         genId(),
-      name:       name,
-      age:        document.getElementById('pAge').value.trim(),
-      diag:       document.getElementById('pDiag').value.trim(),
-      therapist:  document.getElementById('pTherapist').value.trim(),
-      createdAt:  now,
-      sessions:   0
-    });
-  }
-  savePatients(pts);
-  closePatientModal();
-  renderPatientList();
-  if (!editingPatientId) {
-    // Auto-seleccionar el recién creado
-    setActivePatient(pts[0].id);
-  }
-}
-
-function deletePatient(id) {
-  if (!confirm('¿Eliminar este paciente? Sus datos de historial no se borrarán.')) return;
-  var pts = getPatients().filter(function(p){ return p.id !== id; });
-  savePatients(pts);
-  if (activePatientId === id) clearActivePatient();
-  renderPatientList();
-}
-
-function setActivePatient(id) {
-  activePatientId = id;
-  localStorage.setItem('activePatientId', id);
-  refreshPatientBanner();
-  renderPatientList();
-}
-
-function clearActivePatient() {
-  activePatientId = null;
-  localStorage.removeItem('activePatientId');
-  refreshPatientBanner();
-  renderPatientList();
-}
-
-function refreshPatientBanner() {
-  var banner  = document.getElementById('patientBanner');
-  var warn    = document.getElementById('noPatientWarn');
-  var active  = document.getElementById('activePatientCard');
-
-  if (activePatientId) {
-    var pts = getPatients();
-    var p = pts.find(function(x){return x.id===activePatientId;});
-    if (p) {
-      document.getElementById('bannerName').textContent = p.name;
-      var meta = [];
-      if (p.age)       meta.push(p.age + ' años');
-      if (p.diag)      meta.push(p.diag);
-      if (p.therapist) meta.push('Lic. ' + p.therapist);
-      document.getElementById('bannerMeta').textContent = meta.join(' · ') || 'Sin diagnóstico';
-      banner.style.display = 'flex';
-      warn.style.display   = 'none';
-      // Tarjeta en pantalla Pacientes
-      document.getElementById('activePatientName').textContent = p.name;
-      document.getElementById('activePatientMeta').textContent = meta.join(' · ') || '—';
-      active.style.display = 'block';
-      return;
-    }
-  }
-  banner.style.display = 'none';
-  warn.style.display   = 'flex';
-  active.style.display = 'none';
-}
-
-function renderPatientList() {
-  var pts  = getPatients();
-  var q    = (document.getElementById('patientSearch').value || '').toLowerCase().trim();
-  var list = document.getElementById('patientList');
-  var none = document.getElementById('noPatients');
-
-  var filtered = q ? pts.filter(function(p){
-    return p.name.toLowerCase().includes(q) ||
-           (p.diag||'').toLowerCase().includes(q) ||
-           (p.therapist||'').toLowerCase().includes(q);
-  }) : pts;
-
-  if (!pts.length) {
-    list.innerHTML = ''; none.style.display = 'block'; return;
-  }
-  none.style.display = 'none';
-
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty-state" style="padding:20px 0">Sin resultados para "' + q + '"</div>';
-    return;
-  }
-
-  list.innerHTML = filtered.map(function(p) {
-    var isActive = p.id === activePatientId;
-    var meta = [];
-    if (p.age)  meta.push(p.age + ' años');
-    if (p.diag) meta.push(p.diag);
-    var sessions = countPatientSessions(p.id);
-    return '<div class="patient-card' + (isActive?' active-patient':'') + '">' +
-      '<div class="row" style="align-items:flex-start">' +
-        '<div style="flex:1;cursor:pointer" onclick="setActivePatient(\'' + p.id + '\')">' +
-          '<div class="patient-card-name">' + escHtml(p.name) +
-            (isActive ? ' <span class="badge badge-green">● Activo</span>' : '') +
-          '</div>' +
-          '<div class="patient-card-meta">' + (meta.join(' · ') || 'Sin diagnóstico') + '</div>' +
-          (p.therapist ? '<div class="patient-card-meta">Lic. ' + escHtml(p.therapist) + '</div>' : '') +
-          '<div class="patient-card-sessions" style="margin-top:4px">📊 ' + sessions + ' sesión(es) registrada(s)</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:6px;flex-shrink:0">' +
-          '<button class="btn btn-secondary btn-sm" onclick="openPatientModal(\'' + p.id + '\')">✏️</button>' +
-          '<button class="btn btn-danger btn-sm" onclick="deletePatient(\'' + p.id + '\')">🗑</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function countPatientSessions(pid) {
-  // Cuenta cuántos días tiene guardados este paciente
-  var days = [];
-  for (var i=0; i<localStorage.length; i++) {
-    var key = localStorage.key(i);
-    if (key && key.startsWith('pg_hist_')) {
-      try {
-        var arr = JSON.parse(localStorage.getItem(key)||'[]');
-        if (arr.some(function(r){return r.patientId===pid;})) days.push(key);
-      } catch(e){}
-    }
-  }
-  return days.length;
-}
-
-function escHtml(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Analytics patient filter ───────────────────────────────────────────
-function populatePatientFilter() {
-  var sel = document.getElementById('analyticsPatientFilter');
-  var pts = getPatients();
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">— Todos los pacientes —</option>' +
-    pts.map(function(p){
-      return '<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>'+escHtml(p.name)+'</option>';
-    }).join('');
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// CONNECTION
-// ══════════════════════════════════════════════════════════════════════
+// ── Connect modal ──────────────────────────────────────────────────────────
 function openModal() {
   if (connected) { doDisconnect(); return; }
   document.getElementById('connModal').classList.add('open');
   document.getElementById('bleError').style.display = 'none';
   switchMethod('bt');
+}
+
+// ── Web Bluetooth (conexión real al ESP32) ──────────────────────────────────
+// === BLUETOOTH - CORREGIDO ===
+function connectBLE() {
+  var err = document.getElementById('bleError');
+  err.style.display = 'none';
+
+  if (!navigator.bluetooth) {
+    err.textContent = 'Bluetooth no disponible. Usa Chrome en Android.';
+    err.style.display = 'block';
+    return;
+  }
+
+  navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: [BLE_SERVICE]
+  })
+  .then(function(device) {
+    bleDevice = device;
+    device.addEventListener('gattserverdisconnected', onBleDisconnect);
+    return device.gatt.connect();
+  })
+  .then(function(server) {
+    return server.getPrimaryService(BLE_SERVICE);
+  })
+  .then(function(service) {
+    bleService = service;
+    return service.getCharacteristic(BLE_TX);
+  })
+  .then(function(ch) {
+    bleChar = ch;
+    return ch.startNotifications();
+  })
+  .then(function() {
+    bleChar.addEventListener('characteristicvaluechanged', onBleData);
+    return bleService.getCharacteristic(BLE_RX);
+  })
+  .then(function(rxChar) {
+    bleRxChar = rxChar;
+    console.log("✓ RX disponible");
+    console.log("  UUID:", rxChar.uuid);
+    console.log("  canWrite:", rxChar.properties.write);
+    doConnect(bleDevice.name || 'TRANSIBIP', 'bt');
+  })
+  .catch(function(e) {
+    err.textContent = 'Error: ' + e.message;
+    err.style.display = 'block';
+    console.error("BLE Error:", e);
+  });
+}
+// El ESP32 envía una línea CSV: "back,bottom,gyroX,gyroY"
+function onBleData(event) {
+  var txt = new TextDecoder().decode(event.target.value).trim();
+  var p = txt.split(',');
+  if (p.length < 2) return;
+  backP    = parseInt(p[0]) || 0;
+  bottomP  = parseInt(p[1]) || 0;
+  gyroXv   = p.length > 2 ? (parseFloat(p[2]) || 0) : 0;
+  gyroYv   = p.length > 3 ? (parseFloat(p[3]) || 0) : 0;
+  updateSensorUI();
+  updateGyroUI();
+}
+
+function onBleDisconnect() {
+  if (connected) doDisconnect();
 }
 function closeModal() { document.getElementById('connModal').classList.remove('open'); }
 function switchMethod(m) {
@@ -736,261 +489,273 @@ function switchMethod(m) {
   document.getElementById('btList').classList.toggle('show', m==='bt');
   document.getElementById('wifiForm').classList.toggle('show', m==='wifi');
 }
-function connectBLE() {
-  var err = document.getElementById('bleError');
-  err.style.display = 'none';
-  if (!navigator.bluetooth) {
-    err.textContent = 'Este navegador no soporta Web Bluetooth. Usa Chrome en Android.';
-    err.style.display = 'block'; return;
-  }
-  navigator.bluetooth.requestDevice({ filters:[{namePrefix:'TransiBip'}], optionalServices:[BLE_SERVICE] })
-  .then(function(d){ bleDevice=d; d.addEventListener('gattserverdisconnected',onBleDisconnect); return d.gatt.connect(); })
-  .then(function(s){ return s.getPrimaryService(BLE_SERVICE); })
-  .then(function(s){ return s.getCharacteristic(BLE_TX); })
-  .then(function(c){ bleChar=c; return c.startNotifications(); })
-  .then(function(){ bleChar.addEventListener('characteristicvaluechanged',onBleData); doConnect(bleDevice.name||'TransiBip ESP32','bt'); })
-  .catch(function(e){ err.textContent='No se pudo conectar: '+e.message; err.style.display='block'; });
-}
-function onBleData(e) {
-  var txt = new TextDecoder().decode(e.target.value).trim();
-  var p = txt.split(',');
-  if (p.length<2) return;
-  backP=parseInt(p[0])||0; bottomP=parseInt(p[1])||0;
-  gyroXv=p.length>2?(parseFloat(p[2])||0):0;
-  gyroYv=p.length>3?(parseFloat(p[3])||0):0;
-  updateSensorUI(); updateGyroUI();
-}
-function onBleDisconnect() { if(connected) doDisconnect(); }
 function doWifiConnect() {
-  var ssid=document.getElementById('wifiSSID').value.trim();
-  var pass=document.getElementById('wifiPass').value;
-  var err=document.getElementById('wifiError');
-  if(!ssid){err.textContent='Please enter network SSID';err.style.display='block';return;}
-  if(!pass){err.textContent='Please enter WiFi password';err.style.display='block';return;}
-  err.style.display='none';
-  var btn=document.getElementById('wifiConnBtn');
-  btn.textContent='Connecting...'; btn.disabled=true;
-  setTimeout(function(){btn.textContent='Connect via WiFi';btn.disabled=false;doConnect(ssid,'wifi');},1500);
+  var ssid = document.getElementById('wifiSSID').value.trim();
+  var pass  = document.getElementById('wifiPass').value;
+  var err   = document.getElementById('wifiError');
+  if (!ssid) { err.textContent='Please enter network SSID'; err.style.display='block'; return; }
+  if (!pass) { err.textContent='Please enter WiFi password'; err.style.display='block'; return; }
+  err.style.display = 'none';
+  var btn = document.getElementById('wifiConnBtn');
+  btn.textContent = 'Connecting...'; btn.disabled = true;
+  setTimeout(function() { btn.textContent='Connect via WiFi'; btn.disabled=false; doConnect(ssid, 'wifi'); }, 1500);
 }
-function doConnect(name,method) {
-  closeModal(); connected=true; connMode=method;
-  var ml=method==='wifi'?'WiFi':method==='demo'?'Demo':'Bluetooth';
-  document.getElementById('connectBtn').className='connect-btn on';
-  document.getElementById('connDot').className='dot dot-green';
-  document.getElementById('connLabel').textContent='Connected';
-  document.getElementById('noBanner').style.display='none';
-  document.getElementById('greenLedBar').style.display='flex';
-  document.getElementById('connDeviceName').textContent=name;
-  document.getElementById('connMethodLabel').textContent='Connected via '+ml;
-  document.getElementById('bt-name').textContent=name;
-  document.getElementById('bt-sub').textContent='Active session via '+ml;
-  document.getElementById('bt-dot').style.background='#10B981';
-  if(method==='demo'||method==='wifi') startSensors();
-  // Incrementar contador de sesiones del paciente activo
-  if (activePatientId) {
-    var pts = getPatients();
-    pts = pts.map(function(p){
-      if(p.id===activePatientId) return Object.assign({},p,{sessions:(p.sessions||0)+1});
-      return p;
-    });
-    savePatients(pts);
-  }
-  saveInterval=setInterval(function(){recordReading();},3000);
+
+// ── Connection ─────────────────────────────────────────────────────────────
+function doConnect(name, method) {
+  closeModal(); connected = true; connMode = method;
+  var methodLabel = method==='wifi' ? 'WiFi' : method==='demo' ? 'Demo' : 'Bluetooth';
+  document.getElementById('connectBtn').className = 'connect-btn on';
+  document.getElementById('connDot').className = 'dot dot-green';
+  document.getElementById('connLabel').textContent = 'Connected';
+  document.getElementById('noBanner').style.display = 'none';
+  document.getElementById('greenLedBar').style.display = 'flex';
+  document.getElementById('connDeviceName').textContent = name;
+  document.getElementById('connMethodLabel').textContent = 'Connected via ' + methodLabel;
+  document.getElementById('bt-name').textContent = name;
+  document.getElementById('bt-sub').textContent = 'Active session via ' + methodLabel;
+  document.getElementById('bt-dot').style.background = '#10B981';
+    document.getElementById('pesoCard').style.display = 'block';
+
+  // En modo demo/wifi generamos datos; por Bluetooth los datos llegan del ESP32
+  if (method === 'demo' || method === 'wifi') startSensors();
+  // Registrar lecturas cada 3s (siempre local; sincroniza a Sheets si está configurado)
+  saveInterval = setInterval(function() { recordReading(); }, 3000);
 }
+
 function doDisconnect() {
-  connected=false;
-  document.getElementById('connectBtn').className='connect-btn';
-  document.getElementById('connDot').className='dot dot-gray';
-  document.getElementById('connLabel').textContent='Connect';
-  document.getElementById('noBanner').style.display='block';
-  document.getElementById('greenLedBar').style.display='none';
-  document.getElementById('bt-name').textContent='Not connected';
-  document.getElementById('bt-sub').textContent='Tap Monitor to connect';
-  document.getElementById('bt-dot').style.background='#475569';
+  connected = false;
+  document.getElementById('connectBtn').className = 'connect-btn';
+  document.getElementById('connDot').className = 'dot dot-gray';
+  document.getElementById('connLabel').textContent = 'Connect';
+  document.getElementById('noBanner').style.display = 'block';
+  document.getElementById('greenLedBar').style.display = 'none';
+  document.getElementById('bt-name').textContent = 'Not connected';
+  document.getElementById('bt-sub').textContent = 'Tap Monitor to connect';
+  document.getElementById('bt-dot').style.background = '#475569';
+  document.getElementById('pesoCard').style.display = 'none';
   clearInterval(saveInterval);
-  if(bleDevice&&bleDevice.gatt&&bleDevice.gatt.connected){try{bleDevice.gatt.disconnect();}catch(e){}}
+  if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
+    try { bleDevice.gatt.disconnect(); } catch (e) {}
+  }
   stopSensors(); resetSensors();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// SENSORS
-// ══════════════════════════════════════════════════════════════════════
+// ── Sensors (simulated — replace with real ESP32 data) ─────────────────────
 function startSensors() {
-  sensorInterval=setInterval(function(){
-    backP=Math.floor(300+Math.random()*723);
-    bottomP=Math.floor(200+Math.random()*823);
+  sensorInterval = setInterval(function() {
+    backP   = Math.floor(300 + Math.random() * 723);
+    bottomP = Math.floor(200 + Math.random() * 823);
     updateSensorUI();
-  },1500);
-  gyroInterval=setInterval(function(){
-    gyroXv=Math.round((Math.random()*60-30)*10)/10;
-    gyroYv=Math.round((Math.random()*60-30)*10)/10;
+  }, 1500);
+  gyroInterval = setInterval(function() {
+    // Simula ángulos de inclinación en grados (-30° a 30°)
+    gyroXv = Math.round((Math.random()*60-30)*10)/10;
+    gyroYv = Math.round((Math.random()*60-30)*10)/10;
     updateGyroUI();
-  },800);
+  }, 800);
 }
-function stopSensors(){clearInterval(sensorInterval);clearInterval(gyroInterval);}
-function resetSensors(){backP=0;bottomP=0;gyroXv=0;gyroYv=0;updateSensorUI();updateGyroUI();}
-function updateSensorUI(){
-  var th=pressureThreshold,bH=backP>=th,btH=bottomP>=th;
-  document.getElementById('backVal').textContent=backP;
-  document.getElementById('bottomVal').textContent=bottomP;
-  document.getElementById('backVal').style.color=bH?'#EF4444':'#10B981';
-  document.getElementById('bottomVal').style.color=btH?'#EF4444':'#10B981';
-  document.getElementById('backFill').style.width=Math.round(backP/1023*100)+'%';
-  document.getElementById('backFill').style.background=bH?'#EF4444':'#10B981';
-  document.getElementById('bottomFill').style.width=Math.round(bottomP/1023*100)+'%';
-  document.getElementById('bottomFill').style.background=btH?'#EF4444':'#10B981';
-  document.getElementById('backStatus').textContent=bH?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('backStatus').className=bH?'status-hi':'status-ok';
-  document.getElementById('bottomStatus').textContent=btH?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('bottomStatus').className=btH?'status-hi':'status-ok';
-  document.getElementById('backLed').className='fsr-led'+(bH?' on':'');
-  document.getElementById('bottomLed').className='fsr-led'+(btH?' on':'');
-  updateMuscles(bH,btH);
+function stopSensors()  { clearInterval(sensorInterval); clearInterval(gyroInterval); }
+function resetSensors() { backP=0; bottomP=0; gyroXv=0; gyroYv=0; updateSensorUI(); updateGyroUI(); }
+
+function updateSensorUI() {
+  var th = pressureThreshold;
+  var bHigh = backP >= th, btHigh = bottomP >= th;
+  document.getElementById('backVal').textContent = backP;
+  document.getElementById('bottomVal').textContent = bottomP;
+  document.getElementById('backVal').style.color   = bHigh ? '#EF4444' : '#10B981';
+  document.getElementById('bottomVal').style.color = btHigh ? '#EF4444' : '#10B981';
+  document.getElementById('backFill').style.width    = Math.round(backP/1023*100)+'%';
+  document.getElementById('backFill').style.background   = bHigh ? '#EF4444' : '#10B981';
+  document.getElementById('bottomFill').style.width  = Math.round(bottomP/1023*100)+'%';
+  document.getElementById('bottomFill').style.background = btHigh ? '#EF4444' : '#10B981';
+  document.getElementById('backStatus').textContent   = bHigh  ? '⚠️ HIGH PRESSURE' : 'Normal';
+  document.getElementById('backStatus').className     = bHigh  ? 'status-hi' : 'status-ok';
+  document.getElementById('bottomStatus').textContent = btHigh ? '⚠️ HIGH PRESSURE' : 'Normal';
+  document.getElementById('bottomStatus').className   = btHigh ? 'status-hi' : 'status-ok';
+  document.getElementById('backLed').className   = 'fsr-led' + (bHigh  ? ' on' : '');
+  document.getElementById('bottomLed').className = 'fsr-led' + (btHigh ? ' on' : '');
+  updateMuscles(bHigh, btHigh);
 }
-function updateMuscles(bH,btH){
-  var bc=backP>0?(bH?'#EF4444':'#93C5FD'):'#334155';
-  var bl=backP>0?(bH?'#FCA5A5':'#BFDBFE'):'#475569';
-  var btc=bottomP>0?(btH?'#EF4444':'#93C5FD'):'#334155';
-  var btl=bottomP>0?(btH?'#FCA5A5':'#BFDBFE'):'#475569';
+
+function updateMuscles(bHigh, btHigh) {
+  var bc  = backP > 0 ? (bHigh ? '#EF4444' : '#93C5FD') : '#334155';
+  var bl  = backP > 0 ? (bHigh ? '#FCA5A5' : '#BFDBFE') : '#475569';
+  var btc = bottomP > 0 ? (btHigh ? '#EF4444' : '#93C5FD') : '#334155';
+  var btl = bottomP > 0 ? (btHigh ? '#FCA5A5' : '#BFDBFE') : '#475569';
   ['m-rhom-l','m-rhom-r','m-lat-l','m-lat-r','m-erect-l','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bc)});
   ['m-trap-l','m-trap-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bl)});
-  document.getElementById('m-spine').setAttribute('fill',bH?'#DC2626':'#1E40AF');
+  document.getElementById('m-spine').setAttribute('fill', bHigh ? '#DC2626' : '#1E40AF');
   ['g-left','g-right'].forEach(function(id){document.getElementById(id).setAttribute('fill',btc)});
   ['g-med-l','g-med-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',btl)});
-  document.getElementById('g-sacrum').setAttribute('fill',bottomP>0?'#06B6D4':'#334155');
-}
-function updateGyroUI(){
-  document.getElementById('gyroX').textContent=connected?(gyroXv+'°'):'---';
-  document.getElementById('gyroY').textContent=connected?(gyroYv+'°'):'---';
-  var dot=document.getElementById('gydot');
-  if(connected){
-    dot.className='gydot active';
-    dot.style.left='calc(50% + '+Math.max(-38,Math.min(38,gyroXv))+'px)';
-    dot.style.top='calc(50% + '+Math.max(-38,Math.min(38,gyroYv))+'px)';
-  }else{dot.className='gydot';dot.style.left='50%';dot.style.top='50%';}
+  document.getElementById('g-sacrum').setAttribute('fill', bottomP > 0 ? '#06B6D4' : '#334155');
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// LOCAL STORAGE + SHEETS  (ahora incluye patientId y patientName)
-// ══════════════════════════════════════════════════════════════════════
-function pad(n){return n<10?'0'+n:''+n;}
-function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
-function nowTime(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
-function getLocalDays(){try{return JSON.parse(localStorage.getItem('pg_days')||'[]').sort().reverse();}catch(e){return[];}}
-function getLocalDay(day){try{return JSON.parse(localStorage.getItem('pg_hist_'+day)||'[]');}catch(e){return[];}}
-function clearLocalHistory(){
-  getLocalDays().forEach(function(d){localStorage.removeItem('pg_hist_'+d);});
-  localStorage.removeItem('pg_days'); selectedDay=''; loadAnalytics();
+function updateGyroUI() {
+  document.getElementById('gyroX').textContent = connected ? (gyroXv + '°') : '---';
+  document.getElementById('gyroY').textContent = connected ? (gyroYv + '°') : '---';
+  var dot = document.getElementById('gydot');
+  if (connected) {
+    // Ángulo en grados → posición en el crosshair (1° ≈ 1px, tope ±38px)
+    dot.className = 'gydot active';
+    dot.style.left = 'calc(50% + ' + Math.max(-38,Math.min(38,gyroXv)) + 'px)';
+    dot.style.top  = 'calc(50% + ' + Math.max(-38,Math.min(38,gyroYv)) + 'px)';
+  } else {
+    dot.className = 'gydot'; dot.style.left = '50%'; dot.style.top = '50%';
+  }
 }
 
-function getActivePatientName() {
-  if (!activePatientId) return '';
-  var pts = getPatients();
-  var p = pts.find(function(x){return x.id===activePatientId;});
-  return p ? p.name : '';
+// ── Google Sheets integration ──────────────────────────────────────────────
+function updateSheetsBadge(state, msg) {
+  var badge = document.getElementById('sheetsBadge');
+  if (state === 'ok')       { badge.className='sheets-badge ok'; badge.textContent='🗂️ Google Sheets: conectado ✓'; }
+  else if (state === 'err') { badge.className='sheets-badge err'; badge.textContent='🗂️ Sheets: error — ' + (msg||''); }
+  else if (state === 'checking') { badge.className='sheets-badge off'; badge.textContent='🗂️ Verificando Sheets...'; }
+  else                      { badge.className='sheets-badge off'; badge.textContent='💾 Historial local activo (Sheets opcional)'; }
 }
 
-function recordReading(){
-  if(!connected) return;
-  var day=todayStr(), key='pg_hist_'+day;
-  var arr; try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}
-  arr.push({
-    time:     nowTime(),
-    back:     backP,
-    bottom:   bottomP,
-    gyroX:    gyroXv,
-    gyroY:    gyroYv,
-    patientId:   activePatientId || '',
-    patientName: getActivePatientName()
-  });
-  if(arr.length>2000) arr=arr.slice(-2000);
-  localStorage.setItem(key,JSON.stringify(arr));
-  var days=getLocalDays();
-  if(days.indexOf(day)<0){days.push(day);localStorage.setItem('pg_days',JSON.stringify(days));}
-  if(scriptURL) saveToSheets();
+// ── Historial local (funciona sin Google Sheets) ───────────────────────────
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function nowTime() {
+  var d = new Date();
+  return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+function getLocalDays() {
+  try { return JSON.parse(localStorage.getItem('pg_days') || '[]').sort().reverse(); }
+  catch (e) { return []; }
+}
+function getLocalDay(day) {
+  try { return JSON.parse(localStorage.getItem('pg_hist_' + day) || '[]'); }
+  catch (e) { return []; }
+}
+function clearLocalHistory() {
+  getLocalDays().forEach(function(d) { localStorage.removeItem('pg_hist_' + d); });
+  localStorage.removeItem('pg_days');
+  selectedDay = '';
+  loadAnalytics();
 }
 
-function saveToSheets(){
-  if(!scriptURL||!connected) return;
-  var url=scriptURL+'?action=write'
-    +'&back='+backP+'&bottom='+bottomP
-    +'&gyroX='+gyroXv+'&gyroY='+gyroYv
-    +'&patient='+encodeURIComponent(getActivePatientName());
+// Registrar una lectura: siempre local, y a Sheets si está configurado
+function recordReading() {
+  if (!connected) return;
+  var day = todayStr();
+  var key = 'pg_hist_' + day;
+  var arr;
+  try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { arr = []; }
+  arr.push({ time: nowTime(), back: backP, bottom: bottomP, gyroX: gyroXv, gyroY: gyroYv });
+  if (arr.length > 2000) arr = arr.slice(-2000);
+  localStorage.setItem(key, JSON.stringify(arr));
+  var days = getLocalDays();
+  if (days.indexOf(day) < 0) { days.push(day); localStorage.setItem('pg_days', JSON.stringify(days)); }
+  if (scriptURL) saveToSheets();
+}
+
+function saveToSheets() {
+  if (!scriptURL || !connected) return;
+  var url = scriptURL + '?action=write'
+    + '&back='   + backP
+    + '&bottom=' + bottomP
+    + '&gyroX='  + gyroXv
+    + '&gyroY='  + gyroYv;
   fetch(url)
-    .then(function(r){return r.json();})
-    .then(function(d){if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}})
-    .catch(function(){updateSheetsBadge('err','sin conexión');});
-}
-
-function updateSheetsBadge(state,msg){
-  var b=document.getElementById('sheetsBadge');
-  if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Google Sheets: conectado ✓';}
-  else if(state==='err'){b.className='sheets-badge err';b.textContent='🗂 Sheets: error — '+(msg||'');}
-  else if(state==='checking'){b.className='sheets-badge off';b.textContent='🗂 Verificando Sheets...';}
-  else{b.className='sheets-badge off';b.textContent='💾 Historial local activo (Sheets opcional)';}
-}
-
-function testSheetsConnection(){
-  var url=document.getElementById('scriptURL').value.trim();
-  if(!url){showSheetsTestResult('Pega la URL del Apps Script primero',false);return;}
-  showSheetsTestResult('<span class="spinner"></span>Probando...',null);
-  fetch(url+'?action=days')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.status==='ok'){showSheetsTestResult('✅ Conexión exitosa — '+d.days.length+' día(s) registrados',true);scriptURL=url;updateSheetsBadge('ok');}
-      else showSheetsTestResult('❌ Respuesta inesperada del script',false);
-    })
-    .catch(function(){showSheetsTestResult('❌ No se pudo conectar. Verifica la URL.',false);});
-}
-function showSheetsTestResult(msg,ok){
-  var el=document.getElementById('sheetsTestResult');
-  el.style.display='block';
-  el.style.color=ok===true?'#10B981':ok===false?'#EF4444':'#94A3B8';
-  el.innerHTML=msg;
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// ANALYTICS
-// ══════════════════════════════════════════════════════════════════════
-function fetchDays(){
-  if(scriptURL) return fetch(scriptURL+'?action=days').then(function(r){return r.json();});
-  return Promise.resolve({status:'ok',days:getLocalDays()});
-}
-function fetchDay(day){
-  if(scriptURL) return fetch(scriptURL+'?action=read&day='+day).then(function(r){return r.json();});
-  return Promise.resolve({status:'ok',rows:getLocalDay(day)});
-}
-
-function loadAnalytics(){
-  document.getElementById('refreshBtn').innerHTML='<span class="spinner"></span>Cargando...';
-  fetchDays()
-    .then(function(data){
-      var days=data.days||[];
-      renderDaySelector(days);
-      if((!selectedDay||days.indexOf(selectedDay)<0)&&days.length>0) selectedDay=days[0];
-      if(selectedDay) loadDayData(selectedDay);
-      else{
-        document.getElementById('refreshBtn').textContent='🔄 Actualizar';
-        document.getElementById('historyList').innerHTML='<div class="empty-state">No hay datos. Conecta el dispositivo para empezar.</div>';
-        renderStats([]);renderChart([]);renderInsights([]);
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        sheetsOk = true;
+        updateSheetsBadge('ok');
       }
     })
-    .catch(function(){
-      document.getElementById('refreshBtn').textContent='🔄 Actualizar';
-      document.getElementById('historyList').innerHTML='<div class="empty-state" style="color:#EF4444">❌ Error conectando</div>';
+    .catch(function(e) { updateSheetsBadge('err', 'sin conexión'); });
+}
+
+function testSheetsConnection() {
+  var url = document.getElementById('scriptURL').value.trim();
+  if (!url) { showSheetsTestResult('Pega la URL primero', false); return; }
+
+  showSheetsTestResult('<span class="spinner"></span>Probando...', null);
+
+  // Usar proxy para evitar CORS
+  var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url + '?action=days');
+
+  fetch(proxyUrl)
+    .then(function(r) { return r.text(); })
+    .then(function(text) {
+      try {
+        var data = JSON.parse(text);
+        if (data.status === 'ok') {
+          showSheetsTestResult('✅ Conexión exitosa!', true);
+          scriptURL = url;
+          localStorage.setItem('scriptURL', url);
+          updateSheetsBadge('ok');
+        } else {
+          showSheetsTestResult('⚠️ Script responde: ' + (data.message || 'ok'), false);
+        }
+      } catch(e) {
+        showSheetsTestResult('❌ Error parsing JSON', false);
+      }
+    })
+    .catch(function(e) { 
+      showSheetsTestResult('❌ Error: ' + e.message, false); 
     });
 }
 
-function renderDaySelector(days){
-  var sel=document.getElementById('daySelector');
-  if(!days.length){sel.innerHTML='<span style="font-size:12px;color:#475569">Sin días registrados</span>';return;}
-  sel.innerHTML='';
-  days.forEach(function(d){
-    var chip=document.createElement('button');
-    chip.className='day-chip'+(d===selectedDay?' active':'');
-    chip.textContent=formatDayLabel(d);
-    chip.onclick=function(){
-      selectedDay=d;
+function showSheetsTestResult(msg, ok) {
+  var el = document.getElementById('sheetsTestResult');
+  el.style.display = 'block';
+  el.style.color = ok === true ? '#10B981' : ok === false ? '#EF4444' : '#94A3B8';
+  el.innerHTML = msg;
+}
+
+// ── Analytics — load from Sheets ──────────────────────────────────────────
+// Devuelve la lista de días desde Sheets (si está configurado) o desde el historial local
+function fetchDays() {
+  if (scriptURL) return fetch(scriptURL + '?action=days').then(function(r){ return r.json(); });
+  return Promise.resolve({ status: 'ok', days: getLocalDays() });
+}
+function fetchDay(day) {
+  if (scriptURL) return fetch(scriptURL + '?action=read&day=' + day).then(function(r){ return r.json(); });
+  return Promise.resolve({ status: 'ok', rows: getLocalDay(day) });
+}
+
+function loadAnalytics() {
+  document.getElementById('analyticsNoSheets').style.display = 'none';
+  document.getElementById('analyticsContent').style.display = 'block';
+  document.getElementById('refreshBtn').innerHTML = '<span class="spinner"></span>Cargando...';
+
+  fetchDays()
+    .then(function(data) {
+      var days = data.days || [];
+      renderDaySelector(days);
+      if ((!selectedDay || days.indexOf(selectedDay) < 0) && days.length > 0) {
+        selectedDay = days[0];
+      }
+      if (selectedDay) loadDayData(selectedDay);
+      else {
+        document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+        document.getElementById('historyList').innerHTML = '<div class="empty-state">No hay datos aún. Pulsa Connect → modo demo (o conecta el ESP32) para empezar a registrar.</div>';
+        renderStats([]); renderChart([]); renderInsights([]);
+      }
+    })
+    .catch(function() {
+      document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+      document.getElementById('historyList').innerHTML = '<div class="empty-state" style="color:#EF4444">❌ Error conectando a Sheets. Verifica la URL en Settings.</div>';
+    });
+}
+
+function renderDaySelector(days) {
+  var sel = document.getElementById('daySelector');
+  if (days.length === 0) { sel.innerHTML = '<span style="font-size:12px;color:#475569">Sin días registrados</span>'; return; }
+  sel.innerHTML = '';
+  days.forEach(function(d) {
+    var chip = document.createElement('button');
+    chip.className = 'day-chip' + (d === selectedDay ? ' active' : '');
+    chip.textContent = formatDayLabel(d);
+    chip.onclick = function() {
+      selectedDay = d;
       document.querySelectorAll('.day-chip').forEach(function(c){c.classList.remove('active')});
       chip.classList.add('active');
       loadDayData(d);
@@ -999,134 +764,176 @@ function renderDaySelector(days){
   });
 }
 
-function formatDayLabel(s){
-  var p=s.split('-'); if(p.length<3) return s;
-  var m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  return p[2]+' '+m[parseInt(p[1])-1];
+function formatDayLabel(dateStr) {
+  // "2025-01-15" → "15 ene"
+  var parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  var months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return parts[2] + ' ' + months[parseInt(parts[1])-1];
 }
 
-function loadDayData(day){
-  document.getElementById('historyTitle').textContent='Historial — '+day;
-  document.getElementById('historyList').innerHTML='<div class="empty-state"><span class="spinner"></span>Cargando...</div>';
+function loadDayData(day) {
+  document.getElementById('historyTitle').textContent = 'Historial — ' + day;
+  document.getElementById('historyList').innerHTML = '<div class="empty-state"><span class="spinner"></span>Cargando...</div>';
+
   fetchDay(day)
-    .then(function(data){
-      document.getElementById('refreshBtn').textContent='🔄 Actualizar';
-      // Filtrar por paciente si está seleccionado en el dropdown
-      var filterPid = document.getElementById('analyticsPatientFilter').value;
-      var rows = (data.rows||[]).filter(function(r){
-        return !filterPid || r.patientId === filterPid;
-      });
-      renderHistory(rows);renderStats(rows);renderChart(rows);renderInsights(rows);
+    .then(function(data) {
+      document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+      renderHistory(data.rows || []);
+      renderStats(data.rows || []);
+      renderChart(data.rows || []);
+      renderInsights(data.rows || []);
     })
-    .catch(function(){
-      document.getElementById('refreshBtn').textContent='🔄 Actualizar';
-      document.getElementById('historyList').innerHTML='<div class="empty-state" style="color:#EF4444">❌ Error cargando datos</div>';
+    .catch(function() {
+      document.getElementById('refreshBtn').textContent = '🔄 Actualizar';
+      document.getElementById('historyList').innerHTML = '<div class="empty-state" style="color:#EF4444">❌ Error cargando datos</div>';
     });
 }
 
-function renderHistory(rows){
-  var list=document.getElementById('historyList');
-  if(!rows.length){list.innerHTML='<div class="empty-state">Sin lecturas para este día</div>';return;}
-  var recent=rows.slice(-30).reverse();
-  list.innerHTML='';
-  recent.forEach(function(r){
-    var isHigh=r.back>=pressureThreshold||r.bottom>=pressureThreshold;
-    var div=document.createElement('div');
-    div.className='history-item '+(isHigh?'hi':'ok');
-    div.innerHTML=
-      '<div>'+
-        '<div class="history-time">'+r.time+'</div>'+
-        (r.patientName?'<div style="font-size:10px;color:#3B82F6;margin-top:1px">👤 '+escHtml(r.patientName)+'</div>':'')+
-      '</div>'+
-      '<div class="history-vals">'+
-        '<span style="color:#93C5FD">B:'+r.back+'</span> '+
-        '<span style="color:#06B6D4">S:'+r.bottom+'</span> '+
-        '<span style="color:#94A3B8;font-size:10px">X:'+r.gyroX+' Y:'+r.gyroY+'</span>'+
-      '</div>'+
-      '<div style="font-size:10px">'+(isHigh?'🔴':'✅')+'</div>';
+function renderHistory(rows) {
+  var list = document.getElementById('historyList');
+  if (!rows.length) { list.innerHTML = '<div class="empty-state">Sin lecturas para este día</div>'; return; }
+  // Mostrar últimas 30
+  var recent = rows.slice(-30).reverse();
+  list.innerHTML = '';
+  recent.forEach(function(r) {
+    var isHigh = r.back >= pressureThreshold || r.bottom >= pressureThreshold;
+    var div = document.createElement('div');
+    div.className = 'history-item ' + (isHigh ? 'hi' : 'ok');
+    div.innerHTML =
+      '<div class="history-time">' + r.time + '</div>' +
+      '<div class="history-vals">' +
+        '<span style="color:#93C5FD">B:' + r.back + '</span> ' +
+        '<span style="color:#06B6D4">S:' + r.bottom + '</span> ' +
+        '<span style="color:#94A3B8;font-size:10px">X:' + r.gyroX + ' Y:' + r.gyroY + '</span>' +
+      '</div>' +
+      '<div style="font-size:10px">' + (isHigh ? '🔴' : '✅') + '</div>';
     list.appendChild(div);
   });
 }
 
-function renderStats(rows){
-  if(!rows.length){
-    document.getElementById('stat-posture').textContent='--%';
-    document.getElementById('stat-back').textContent='---';
-    document.getElementById('stat-bottom').textContent='---'; return;
+function renderStats(rows) {
+  if (!rows.length) {
+    document.getElementById('stat-posture').textContent = '--%';
+    document.getElementById('stat-back').textContent = '---';
+    document.getElementById('stat-bottom').textContent = '---';
+    return;
   }
-  var bA=Math.round(rows.reduce(function(s,r){return s+r.back},0)/rows.length);
-  var btA=Math.round(rows.reduce(function(s,r){return s+r.bottom},0)/rows.length);
-  var g=rows.filter(function(r){return r.back<pressureThreshold&&r.bottom<pressureThreshold}).length;
-  var gp=Math.round(g/rows.length*100);
-  document.getElementById('stat-posture').textContent=gp+'%';
-  document.getElementById('stat-posture').style.color=gp>=60?'#10B981':'#EF4444';
-  document.getElementById('stat-back').textContent=bA;
-  document.getElementById('stat-back').style.color=bA>=pressureThreshold?'#EF4444':'#93C5FD';
-  document.getElementById('stat-bottom').textContent=btA;
-  document.getElementById('stat-bottom').style.color=btA>=pressureThreshold?'#EF4444':'#06B6D4';
+  var backAvg   = Math.round(rows.reduce(function(s,r){return s+r.back},0)   / rows.length);
+  var btAvg     = Math.round(rows.reduce(function(s,r){return s+r.bottom},0) / rows.length);
+  var goodCount = rows.filter(function(r){return r.back < pressureThreshold && r.bottom < pressureThreshold}).length;
+  var goodPct   = Math.round(goodCount / rows.length * 100);
+  document.getElementById('stat-posture').textContent = goodPct + '%';
+  document.getElementById('stat-posture').style.color = goodPct >= 60 ? '#10B981' : '#EF4444';
+  document.getElementById('stat-back').textContent    = backAvg;
+  document.getElementById('stat-back').style.color    = backAvg >= pressureThreshold ? '#EF4444' : '#93C5FD';
+  document.getElementById('stat-bottom').textContent  = btAvg;
+  document.getElementById('stat-bottom').style.color  = btAvg >= pressureThreshold ? '#EF4444' : '#06B6D4';
 }
 
-function renderChart(rows){
-  var el=document.getElementById('chartBars');
-  if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos</div>';return;}
-  var g={};
-  rows.forEach(function(r){
-    var h=r.time?r.time.split(':')[0]+'h':'?';
-    if(!g[h]){g[h]={bs:0,bts:0,c:0};}
-    g[h].bs+=r.back;g[h].bts+=r.bottom;g[h].c++;
+function renderChart(rows) {
+  var chartEl = document.getElementById('chartBars');
+  if (!rows.length) { chartEl.innerHTML = '<div class="empty-state" style="padding:10px 0">Sin datos</div>'; return; }
+  // Agrupar en hasta 8 bloques por hora
+  var grouped = {};
+  rows.forEach(function(r) {
+    var hour = r.time ? r.time.split(':')[0] + 'h' : '?';
+    if (!grouped[hour]) grouped[hour] = {backSum:0, btSum:0, count:0};
+    grouped[hour].backSum += r.back;
+    grouped[hour].btSum   += r.bottom;
+    grouped[hour].count++;
   });
-  el.innerHTML='';
-  Object.keys(g).slice(-8).forEach(function(k){
-    var bA=Math.round(g[k].bs/g[k].c);
-    var btA=Math.round(g[k].bts/g[k].c);
-    var bh=Math.max(4,Math.round(bA/1023*80));
-    var bth=Math.max(4,Math.round(btA/1023*80));
-    el.innerHTML+='<div class="bar-group"><div class="bar-wrap">'+
-      '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>'+
-      '<div class="bar" style="height:'+bth+'px;background:'+(btA>=pressureThreshold?'#DC2626':'#06B6D4')+'"></div>'+
-      '</div><div class="bar-lbl">'+k+'</div></div>';
+  var keys = Object.keys(grouped).slice(-8);
+  chartEl.innerHTML = '';
+  keys.forEach(function(k) {
+    var g   = grouped[k];
+    var bA  = Math.round(g.backSum / g.count);
+    var btA = Math.round(g.btSum   / g.count);
+    var bh  = Math.max(4, Math.round(bA/1023*80));
+    var bth = Math.max(4, Math.round(btA/1023*80));
+    chartEl.innerHTML +=
+      '<div class="bar-group">' +
+        '<div class="bar-wrap">' +
+          '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>' +
+          '<div class="bar" style="height:'+bth+'px;background:'+(btA>=pressureThreshold?'#DC2626':'#06B6D4')+'"></div>' +
+        '</div>' +
+        '<div class="bar-lbl">'+k+'</div>' +
+      '</div>';
   });
 }
 
-function renderInsights(rows){
-  var el=document.getElementById('insights');
-  if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>';return;}
-  var bA=Math.round(rows.reduce(function(s,r){return s+r.back},0)/rows.length);
-  var btA=Math.round(rows.reduce(function(s,r){return s+r.bottom},0)/rows.length);
-  var g=rows.filter(function(r){return r.back<pressureThreshold&&r.bottom<pressureThreshold}).length;
-  var gp=Math.round(g/rows.length*100);
-  function tip(i,t){return'<div class="tip-row"><span class="tip-icon">'+i+'</span><span class="tip-text">'+t+'</span></div>';}
-  var html='';
-  html+=tip(gp>=70?'✅':'⚠️',gp>=70?'Buena postura mantenida el '+gp+'% del tiempo. ¡Sigue así!':'Postura correcta solo el '+gp+'% del tiempo. Toma descansos cada 30 min.');
-  html+=tip(bA<pressureThreshold?'✅':'🔴',bA<pressureThreshold?'La presión en la espalda está en rango normal.':'Presión alta en la espalda. Ajusta la altura del asiento y el soporte lumbar.');
-  html+=tip(btA<pressureThreshold?'✅':'🔴',btA<pressureThreshold?'La presión en el asiento está equilibrada.':'Presión alta en el asiento. Usa un cojín o cambia tu posición al sentarte.');
-  el.innerHTML=html;
+// Consejos de postura calculados con los datos reales del día
+function renderInsights(rows) {
+  var el = document.getElementById('insights');
+  if (!rows.length) { el.innerHTML = '<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>'; return; }
+  var backAvg = Math.round(rows.reduce(function(s,r){return s+r.back},0) / rows.length);
+  var btAvg   = Math.round(rows.reduce(function(s,r){return s+r.bottom},0) / rows.length);
+  var good    = rows.filter(function(r){return r.back < pressureThreshold && r.bottom < pressureThreshold}).length;
+  var gp      = Math.round(good / rows.length * 100);
+  function tip(icon, text) { return '<div class="tip-row"><span class="tip-icon">' + icon + '</span><span class="tip-text">' + text + '</span></div>'; }
+  var html = '';
+  html += tip(gp >= 70 ? '✅' : '⚠️', gp >= 70
+    ? 'Buena postura mantenida el ' + (gp) + '% del tiempo. ¡Sigue así!'
+    : 'Postura correcta solo el ' + gp + '% del tiempo. Toma descansos cada 30 min para pararte y estirar.');
+  html += tip(backAvg < pressureThreshold ? '✅' : '🔴', backAvg < pressureThreshold
+    ? 'La presión en la espalda está en rango normal.'
+    : 'Presión alta en la espalda. Ajusta la altura del asiento y el soporte lumbar.');
+  html += tip(btAvg < pressureThreshold ? '✅' : '🔴', btAvg < pressureThreshold
+    ? 'La presión en el asiento está equilibrada.'
+    : 'Presión alta en el asiento. Usa un cojín o cambia tu posición al sentarte.');
+  el.innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// SETTINGS
-// ══════════════════════════════════════════════════════════════════════
-function toggleBuzzer(){document.getElementById('buzzerSwitch').classList.toggle('on');}
-function onThreshInput(){
-  var v=parseInt(document.getElementById('pressureThresh').value)||700;
-  document.getElementById('curThresh').textContent=v;
-  document.getElementById('threshLabel').textContent=v>=700?'Strict':v>=400?'Moderate':'Relaxed';
+// ── Settings ───────────────────────────────────────────────────────────────
+function toggleBuzzer() { document.getElementById('buzzerSwitch').classList.toggle('on'); }
+
+function onThreshInput() {
+  var v = parseInt(document.getElementById('pressureThresh').value) || 700;
+  document.getElementById('curThresh').textContent = v;
+  document.getElementById('threshLabel').textContent = v>=700 ? 'Strict' : v>=400 ? 'Moderate' : 'Relaxed';
 }
-function saveSettings(){
-  var v=parseInt(document.getElementById('pressureThresh').value)||700;
-  var url=document.getElementById('scriptURL').value.trim();
-  pressureThreshold=Math.max(0,Math.min(1023,v));
-  scriptURL=url;
-  localStorage.setItem('threshold',pressureThreshold);
-  localStorage.setItem('scriptURL',url);
-  if(url) updateSheetsBadge('checking');
-  var btn=document.getElementById('saveBtn');
-  btn.textContent='✓ Saved!';btn.style.background='#059669';
-  setTimeout(function(){btn.textContent='Save configuration';btn.style.background='#10B981';},2000);
+
+function saveSettings() {
+  var url = document.getElementById('scriptURL').value.trim();
+  scriptURL = url;
+  localStorage.setItem('scriptURL', url);
+  if (url) updateSheetsBadge('checking');
+  var btn = document.getElementById('saveBtn');
+  btn.textContent = '✓ Saved!'; btn.style.background = '#059669';
+  setTimeout(function(){ btn.textContent='Save configuration'; btn.style.background='#10B981'; }, 2000);
+  // Activar guardado automático si hay conexión activa
+  if (connected && url && !saveInterval) {
+    saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
+  }
 }
+// === COPIA ESTA FUNCIÓN EXACTA Y REEMPLAZA LA TUYA ===
+function enviarPeso() {
+  var peso = parseFloat(document.getElementById('pesoInput').value);
+  if (!peso || peso <= 0) {
+    alert('Ingresa un peso válido');
+    return;
+  }
+  
+  if (connMode === 'bt' && bleRxChar) {
+    var data = "PESO=" + peso;
+    var buffer = new ArrayBuffer(data.length);
+    var view = new Uint8Array(buffer);
+    for(var i=0; i<data.length; i++) view[i] = data.charCodeAt(i);
+    
+    bleRxChar.writeValue(buffer).then(function() {
+      alert('✓ Enviado: ' + peso + ' kg\n\nRevisa el ESP32');
+    }).catch(function(e) {
+      alert('Error: ' + e.message);
+    });
+  } else {
+    alert('Demo - peso: ' + peso + ' kg');
+  }
+}
+
 </script>
 </body>
 </html>
 
+</html>
 
 
