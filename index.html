@@ -173,16 +173,18 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <button onclick="doDisconnect()" style="background:none;border:1px solid #334155;color:#94A3B8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer">Disconnect</button>
     </div>
 
-  <!-- PESO DEL PACIENTE + USUARIO -->
+ <!-- USUARIO - sale al abrir la app -->
+<div class="peso-card" id="userCard" style="display:block">
+  <div class="peso-label">👤 TU NOMBRE</div>
+  <input type="text" class="peso-input" id="nombreInput" placeholder="Escribe tu nombre" style="font-size:18px">
+  <button class="btn btn-primary" onclick="guardarUsuario()">✓ CONTINUAR</button>
+</div>
+
+<!-- PESO - sale después de conectar -->
 <div class="peso-card" id="pesoCard" style="display:none">
-  <div class="peso-label">TU NOMBRE (para crear tu hoja)</div>
-  <input type="text" class="peso-input" id="nombreInput" placeholder="Tu nombre" style="font-size:18px">
-  
-  <div class="peso-label">PESO DEL PACIENTE (KG)</div>
-  <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
-  
-  <button class="btn btn-primary" onclick="guardarUsuario()">GUARDAR NOMBRE</button>
-  <button class="btn btn-secondary" onclick="enviarPeso()">ENVIAR PESO</button>
+  <div class="peso-label">⚖️ PESO DEL PACIENTE (KG)</div>
+  <input type="number" class="peso-input" id="pesoInput" placeholder="0">
+  <button class="btn btn-primary" onclick="enviarPeso()">ENVIAR PESO</button>
 </div>
 
     <!-- Sheets status -->
@@ -255,19 +257,12 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 </div>
 
     <div class="card">
-      <div class="card-title">Posición (giroscopio)</div>
-      <div class="row" style="gap:12px;align-items:center">
-        <div style="flex:1">
-          <div class="coord-box"><div class="coord-label">X</div><div class="coord-val" id="gyroX">---</div></div>
-          <div class="coord-box"><div class="coord-label">Y</div><div class="coord-val" id="gyroY">---</div></div>
-        </div>
-        <div class="crosshair">
-          <div class="hline"></div><div class="vline"></div>
-          <div class="gydot" id="gydot" style="left:50%;top:50%"></div>
-        </div>
+      <div class="card-title">ÁNGULO</div>
+      <div class="coord-box" style="max-width:120px">
+        <div class="coord-label">Grados</div>
+        <div class="coord-val" id="angleVal" style="color:#10B981;font-size:28px">0°</div>
       </div>
     </div>
-  </div>
 
   <!-- ANALYTICS (History from Sheets) -->
   <div class="screen" id="s-analytics">
@@ -411,8 +406,13 @@ var BLE_RX     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';// UUIDs del servicio No
 window.onload = function() {
   scriptURL = localStorage.getItem('scriptURL') || '';
   document.getElementById('scriptURL').value = scriptURL;
+  
+  // Cargar nombre guardado
+  var nombreGuardado = localStorage.getItem('nombreUsuario') || '';
+  if (nombreGuardado) {
+    document.getElementById('nombreInput').value = nombreGuardado;
+  }
 };
-
 // ── Tabs ───────────────────────────────────────────────────────────────────
 function showTab(name, el) {
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
@@ -636,17 +636,18 @@ function updateMuscles(bHigh, rHigh, lHigh) {
 }
 
 function updateGyroUI() {
-  document.getElementById('gyroX').textContent = connected ? (angle + '°') : '---';
-  var dot = document.getElementById('gydot');
-  if (connected) {
-    dot.className = 'gydot active';
-    dot.style.left = 'calc(50% + ' + Math.max(-38,Math.min(38,angle)) + 'px)';
-    dot.style.top  = '50%';
+  var angleStr = connected ? (angle.toFixed(1) + '°') : '0°';
+  document.getElementById('angleVal').textContent = angleStr;
+  
+  var angleNum = Math.abs(angle);
+  if (angleNum < 10) {
+    document.getElementById('angleVal').style.color = '#10B981'; // verde
+  } else if (angleNum < 25) {
+    document.getElementById('angleVal').style.color = '#F59E0B'; // amarillo
   } else {
-    dot.className = 'gydot'; dot.style.left = '50%'; dot.style.top = '50%';
+    document.getElementById('angleVal').style.color = '#EF4444'; // rojo
   }
 }
-
 // ── Google Sheets integration ──────────────────────────────────────────────
 function updateSheetsBadge(state, msg) {
   var badge = document.getElementById('sheetsBadge');
@@ -956,10 +957,10 @@ function saveSettings() {
     saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
   }
 }
-  function guardarUsuario() {
+function guardarUsuario() {
   var nombre = document.getElementById('nombreInput').value.trim();
   if (!nombre) {
-    alert('Poner tu nombre');
+    alert('Escribe tu nombre');
     return;
   }
   
@@ -981,6 +982,10 @@ function saveSettings() {
   } else {
     alert('Nombre guardado: ' + nombre);
   }
+  
+  // Ocultar userCard, mostrar connect
+  document.getElementById('userCard').style.display = 'none';
+  document.getElementById('connectBtn').style.display = 'flex';  // <-- AGREGAR ESTO
 }
 // === COPIA ESTA FUNCIÓN EXACTA Y REEMPLAZA LA TUYA ===
 function enviarPeso() {
@@ -1006,16 +1011,7 @@ function enviarPeso() {
   }
 }
 
-  window.onload = function() {
-  scriptURL = localStorage.getItem('scriptURL') || '';
-  document.getElementById('scriptURL').value = scriptURL;
-  
-  // Cargar nombre guardado
-  var nombreGuardado = localStorage.getItem('nombreUsuario') || '';
-  if (nombreGuardado) {
-    document.getElementById('nombreInput').value = nombreGuardado;
-  }
-};
+
 </script>
 </body>
 </html>
