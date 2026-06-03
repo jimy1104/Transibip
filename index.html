@@ -173,12 +173,17 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <button onclick="doDisconnect()" style="background:none;border:1px solid #334155;color:#94A3B8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer">Disconnect</button>
     </div>
 
-    <!-- PESO DEL PACIENTE - NUEVO -->
-    <div class="peso-card" id="pesoCard" style="display:none">
-      <div class="peso-label">PESO DEL PACIENTE (KG)</div>
-      <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
-      <button class="btn btn-primary" onclick="enviarPeso()">ENVIAR PESO AL ESP32</button>
-    </div>
+  <!-- PESO DEL PACIENTE + USUARIO -->
+<div class="peso-card" id="pesoCard" style="display:none">
+  <div class="peso-label">TU NOMBRE (para crear tu hoja)</div>
+  <input type="text" class="peso-input" id="nombreInput" placeholder="Tu nombre" style="font-size:18px">
+  
+  <div class="peso-label">PESO DEL PACIENTE (KG)</div>
+  <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
+  
+  <button class="btn btn-primary" onclick="guardarUsuario()">GUARDAR NOMBRE</button>
+  <button class="btn btn-secondary" onclick="enviarPeso()">ENVIAR PESO</button>
+</div>
 
     <!-- Sheets status -->
     <div id="sheetsBadge" class="sheets-badge off">🗂 Google Sheets: no configurado</div>
@@ -391,6 +396,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 // ── State ──────────────────────────────────────────────────────────────────
 var connected=false, pressureThreshold=700, sensorInterval=null, gyroInterval=null;
 var backP=0, rightP=0, leftP=0, angle=0;
+  var firstTime = true;
 var scriptURL = localStorage.getItem('scriptURL') || '';
 var selectedDay = '';
 var sheetsOk = false;
@@ -478,14 +484,30 @@ function onBleData(event) {
   var txt = new TextDecoder().decode(event.target.value).trim();
   var p = txt.split(',');
   if (p.length < 2) return;
+  
   backP   = parseFloat(p[0]) || 0;
   rightP  = parseFloat(p[1]) || 0;
   leftP   = parseFloat(p[2]) || 0;
   angle   = p.length > 3 ? (parseFloat(p[3]) || 0) : 0;
+  
+  // === CREAR HOJA SI ES LA PRIMERA VEZ ===
+  var nombreUsuario = localStorage.getItem('nombreUsuario');
+  if (firstTime && scriptURL && nombreUsuario && connected) {
+    fetch(scriptURL + '?action=createSheet&paciente=' + nombreUsuario)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        alert('📊¡Hoja creada! Link: ' + scriptURL);
+        firstTime = false;
+      }
+    })
+    .catch(e => {});
+    firstTime = false;
+  }
+  
   updateSensorUI();
   updateGyroUI();
 }
-
 function onBleDisconnect() {
   if (connected) doDisconnect();
 }
@@ -934,6 +956,32 @@ function saveSettings() {
     saveInterval = setInterval(function(){ saveToSheets(); }, 5000);
   }
 }
+  function guardarUsuario() {
+  var nombre = document.getElementById('nombreInput').value.trim();
+  if (!nombre) {
+    alert('Poner tu nombre');
+    return;
+  }
+  
+  // Guardar nombre
+  localStorage.setItem('nombreUsuario', nombre);
+  
+  // Si hay URL de Sheets, crear hoja
+  if (scriptURL) {
+    fetch(scriptURL + '?action=createSheet&paciente=' + nombre)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        alert('✅ ¡HOJA CREADA!\n\nTu nombre: ' + nombre + '\n\n📋 GUARDA ESTE LINK:\n' + scriptURL + '\n\n¡Para ver tus datos!');
+      }
+    })
+    .catch(e => {
+      alert('✅ Nombre guardado: ' + nombre);
+    });
+  } else {
+    alert('Nombre guardado: ' + nombre);
+  }
+}
 // === COPIA ESTA FUNCIÓN EXACTA Y REEMPLAZA LA TUYA ===
 function enviarPeso() {
   var peso = parseFloat(document.getElementById('pesoInput').value);
@@ -958,6 +1006,16 @@ function enviarPeso() {
   }
 }
 
+  window.onload = function() {
+  scriptURL = localStorage.getItem('scriptURL') || '';
+  document.getElementById('scriptURL').value = scriptURL;
+  
+  // Cargar nombre guardado
+  var nombreGuardado = localStorage.getItem('nombreUsuario') || '';
+  if (nombreGuardado) {
+    document.getElementById('nombreInput').value = nombreGuardado;
+  }
+};
 </script>
 </body>
 </html>
