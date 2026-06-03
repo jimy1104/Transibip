@@ -411,6 +411,9 @@ window.onload = function() {
   var nombreGuardado = localStorage.getItem('nombreUsuario') || '';
   if (nombreGuardado) {
     document.getElementById('nombreInput').value = nombreGuardado;
+    // Si ya tiene nombre, ocultar userCard y mostrar Connect
+    document.getElementById('userCard').style.display = 'none';
+    document.getElementById('connectBtn').style.display = 'flex';
   }
 };
 // ── Tabs ───────────────────────────────────────────────────────────────────
