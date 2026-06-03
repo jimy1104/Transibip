@@ -228,19 +228,26 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       </div>
     </div>
 
-    <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor espalda (celda 50kg)</span><div class="fsr-led" id="backLed"></div></div>
-      <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
-      <div class="gauge-track"><div class="gauge-fill" id="backFill" style="width:0%;background:#10B981"></div></div>
-      <div id="backStatus" class="status-ok">Normal</div>
-    </div>
+<div class="fsr-card">
+  <div class="fsr-header"><span class="fsr-title">ESPALDA (E)</span><div class="fsr-led" id="backLed"></div></div>
+  <div class="row"><span style="font-size:12px;color:#94A3B8">kg</span><span id="backVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+  <div class="gauge-track"><div class="gauge-fill" id="backFill" style="width:0%;background:#10B981"></div></div>
+  <div id="backStatus" class="status-ok">Normal</div>
+</div>
 
-    <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor asiento (celda 20kg)</span><div class="fsr-led" id="bottomLed"></div></div>
-      <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="bottomVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
-      <div class="gauge-track"><div class="gauge-fill" id="bottomFill" style="width:0%;background:#10B981"></div></div>
-      <div id="bottomStatus" class="status-ok">Normal</div>
-    </div>
+<div class="fsr-card">
+  <div class="fsr-header"><span class="fsr-title">DERECHA (R)</span><div class="fsr-led" id="rightLed"></div></div>
+  <div class="row"><span style="font-size:12px;color:#94A3B8">kg</span><span id="rightVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+  <div class="gauge-track"><div class="gauge-fill" id="rightFill" style="width:0%;background:#10B981"></div></div>
+  <div id="rightStatus" class="status-ok">Normal</div>
+</div>
+
+<div class="fsr-card">
+  <div class="fsr-header"><span class="fsr-title">IZQUIERDA (L)</span><div class="fsr-led" id="leftLed"></div></div>
+  <div class="row"><span style="font-size:12px;color:#94A3B8">kg</span><span id="leftVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+  <div class="gauge-track"><div class="gauge-fill" id="leftFill" style="width:0%;background:#10B981"></div></div>
+  <div id="leftStatus" class="status-ok">Normal</div>
+</div>
 
     <div class="card">
       <div class="card-title">Posición (giroscopio)</div>
@@ -383,7 +390,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
 var connected=false, pressureThreshold=700, sensorInterval=null, gyroInterval=null;
-var backP=0, bottomP=0, gyroXv=0, gyroYv=0;
+var backP=0, rightP=0, leftP=0, angle=0;
 var scriptURL = localStorage.getItem('scriptURL') || '';
 var selectedDay = '';
 var sheetsOk = false;
@@ -471,10 +478,10 @@ function onBleData(event) {
   var txt = new TextDecoder().decode(event.target.value).trim();
   var p = txt.split(',');
   if (p.length < 2) return;
-  backP    = parseInt(p[0]) || 0;
-  bottomP  = parseInt(p[1]) || 0;
-  gyroXv   = p.length > 2 ? (parseFloat(p[2]) || 0) : 0;
-  gyroYv   = p.length > 3 ? (parseFloat(p[3]) || 0) : 0;
+  backP   = parseFloat(p[0]) || 0;
+  rightP  = parseFloat(p[1]) || 0;
+  leftP   = parseFloat(p[2]) || 0;
+  angle   = p.length > 3 ? (parseFloat(p[3]) || 0) : 0;
   updateSensorUI();
   updateGyroUI();
 }
@@ -544,62 +551,75 @@ function doDisconnect() {
 // ── Sensors (simulated — replace with real ESP32 data) ─────────────────────
 function startSensors() {
   sensorInterval = setInterval(function() {
-    backP   = Math.floor(300 + Math.random() * 723);
-    bottomP = Math.floor(200 + Math.random() * 823);
+    backP   = Math.random() * 20;
+    rightP  = Math.random() * 20;
+    leftP   = Math.random() * 20;
+    angle   = Math.random() * 30 - 15;
     updateSensorUI();
-  }, 1500);
+  }, 1000);
   gyroInterval = setInterval(function() {
-    // Simula ángulos de inclinación en grados (-30° a 30°)
-    gyroXv = Math.round((Math.random()*60-30)*10)/10;
-    gyroYv = Math.round((Math.random()*60-30)*10)/10;
     updateGyroUI();
-  }, 800);
+  }, 500);
 }
 function stopSensors()  { clearInterval(sensorInterval); clearInterval(gyroInterval); }
-function resetSensors() { backP=0; bottomP=0; gyroXv=0; gyroYv=0; updateSensorUI(); updateGyroUI(); }
-
+function resetSensors() { backP=0; rightP=0; leftP=0; angle=0; updateSensorUI(); updateGyroUI(); }
 function updateSensorUI() {
   var th = pressureThreshold;
-  var bHigh = backP >= th, btHigh = bottomP >= th;
-  document.getElementById('backVal').textContent = backP;
-  document.getElementById('bottomVal').textContent = bottomP;
-  document.getElementById('backVal').style.color   = bHigh ? '#EF4444' : '#10B981';
-  document.getElementById('bottomVal').style.color = btHigh ? '#EF4444' : '#10B981';
-  document.getElementById('backFill').style.width    = Math.round(backP/1023*100)+'%';
-  document.getElementById('backFill').style.background   = bHigh ? '#EF4444' : '#10B981';
-  document.getElementById('bottomFill').style.width  = Math.round(bottomP/1023*100)+'%';
-  document.getElementById('bottomFill').style.background = btHigh ? '#EF4444' : '#10B981';
-  document.getElementById('backStatus').textContent   = bHigh  ? '⚠ HIGH PRESSURE' : 'Normal';
-  document.getElementById('backStatus').className     = bHigh  ? 'status-hi' : 'status-ok';
-  document.getElementById('bottomStatus').textContent = btHigh ? '⚠ HIGH PRESSURE' : 'Normal';
-  document.getElementById('bottomStatus').className   = btHigh ? 'status-hi' : 'status-ok';
-  document.getElementById('backLed').className   = 'fsr-led' + (bHigh  ? ' on' : '');
-  document.getElementById('bottomLed').className = 'fsr-led' + (btHigh ? ' on' : '');
-  updateMuscles(bHigh, btHigh);
+  var bHigh = backP >= th;
+  var rHigh = rightP >= th;
+  var lHigh = leftP >= th;
+  
+  document.getElementById('backVal').textContent = backP.toFixed(1);
+  document.getElementById('rightVal').textContent = rightP.toFixed(1);
+  document.getElementById('leftVal').textContent = leftP.toFixed(1);
+  
+  document.getElementById('backVal').style.color = bHigh ? '#EF4444' : '#10B981';
+  document.getElementById('rightVal').style.color = rHigh ? '#EF4444' : '#10B981';
+  document.getElementById('leftVal').style.color = lHigh ? '#EF4444' : '#10B981';
+  
+  document.getElementById('backFill').style.width = Math.round(backP/th*100)+'%';
+  document.getElementById('rightFill').style.width = Math.round(rightP/th*100)+'%';
+  document.getElementById('leftFill').style.width = Math.round(leftP/th*100)+'%';
+  
+  document.getElementById('backFill').style.background = bHigh ? '#EF4444' : '#10B981';
+  document.getElementById('rightFill').style.background = rHigh ? '#EF4444' : '#10B981';
+  document.getElementById('leftFill').style.background = lHigh ? '#EF4444' : '#10B981';
+  
+  document.getElementById('backStatus').textContent = bHigh ? '⚠ HIGH' : 'Normal';
+  document.getElementById('rightStatus').textContent = rHigh ? '⚠ HIGH' : 'Normal';
+  document.getElementById('leftStatus').textContent = lHigh ? '⚠ HIGH' : 'Normal';
+  
+  document.getElementById('backLed').className = 'fsr-led' + (bHigh ? ' on' : '');
+  document.getElementById('rightLed').className = 'fsr-led' + (rHigh ? ' on' : '');
+  document.getElementById('leftLed').className = 'fsr-led' + (lHigh ? ' on' : '');
+  
+  updateMuscles(bHigh, rHigh, lHigh);
 }
-
-function updateMuscles(bHigh, btHigh) {
+function updateMuscles(bHigh, rHigh, lHigh) {
   var bc  = backP > 0 ? (bHigh ? '#EF4444' : '#93C5FD') : '#334155';
   var bl  = backP > 0 ? (bHigh ? '#FCA5A5' : '#BFDBFE') : '#475569';
-  var btc = bottomP > 0 ? (btHigh ? '#EF4444' : '#93C5FD') : '#334155';
-  var btl = bottomP > 0 ? (btHigh ? '#FCA5A5' : '#BFDBFE') : '#475569';
+  
+  // Gluteo derecho → rightP
+  document.getElementById('g-right').setAttribute('fill', rHigh ? '#EF4444' : '#93C5FD');
+  document.getElementById('g-med-r').setAttribute('fill', rHigh ? '#FCA5A5' : '#BFDBFE');
+  
+  // Gluteo izquierdo → leftP
+  document.getElementById('g-left').setAttribute('fill', lHigh ? '#EF4444' : '#93C5FD');
+  document.getElementById('g-med-l').setAttribute('fill', lHigh ? '#FCA5A5' : '#BFDBFE');
+  
+  // Back muscles
   ['m-rhom-l','m-rhom-r','m-lat-l','m-lat-r','m-erect-l','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bc)});
   ['m-trap-l','m-trap-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bl)});
   document.getElementById('m-spine').setAttribute('fill', bHigh ? '#DC2626' : '#1E40AF');
-  ['g-left','g-right'].forEach(function(id){document.getElementById(id).setAttribute('fill',btc)});
-  ['g-med-l','g-med-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',btl)});
-  document.getElementById('g-sacrum').setAttribute('fill', bottomP > 0 ? '#06B6D4' : '#334155');
 }
 
 function updateGyroUI() {
-  document.getElementById('gyroX').textContent = connected ? (gyroXv + '°') : '---';
-  document.getElementById('gyroY').textContent = connected ? (gyroYv + '°') : '---';
+  document.getElementById('gyroX').textContent = connected ? (angle + '°') : '---';
   var dot = document.getElementById('gydot');
   if (connected) {
-    // Ángulo en grados → posición en el crosshair (1° ≈ 1px, tope ±38px)
     dot.className = 'gydot active';
-    dot.style.left = 'calc(50% + ' + Math.max(-38,Math.min(38,gyroXv)) + 'px)';
-    dot.style.top  = 'calc(50% + ' + Math.max(-38,Math.min(38,gyroYv)) + 'px)';
+    dot.style.left = 'calc(50% + ' + Math.max(-38,Math.min(38,angle)) + 'px)';
+    dot.style.top  = '50%';
   } else {
     dot.className = 'gydot'; dot.style.left = '50%'; dot.style.top = '50%';
   }
