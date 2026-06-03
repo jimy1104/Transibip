@@ -664,23 +664,28 @@ function recordReading() {
   if (!connected) return;
   var day = todayStr();
   var key = 'pg_hist_' + day;
+  var nombreUsuario = localStorage.getItem('nombreUsuario') || 'default';
   var arr;
   try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { arr = []; }
-  arr.push({ time: nowTime(), back: backP, bottom: bottomP, gyroX: gyroXv, gyroY: gyroYv });
+  arr.push({ time: nowTime(), paciente: nombreUsuario, back: backP, right: rightP, left: leftP, angle: angle });
   if (arr.length > 2000) arr = arr.slice(-2000);
   localStorage.setItem(key, JSON.stringify(arr));
   var days = getLocalDays();
   if (days.indexOf(day) < 0) { days.push(day); localStorage.setItem('pg_days', JSON.stringify(days)); }
-  if (scriptURL) saveToSheets();
+  if (scriptURL && nombreUsuario && nombreUsuario !== 'default') saveToSheets();
 }
-
 function saveToSheets() {
   if (!scriptURL || !connected) return;
+  var nombreUsuario = localStorage.getItem('nombreUsuario') || 'default';
+  var totalPeso = backP + rightP + leftP;
+  
   var url = scriptURL + '?action=write'
-    + '&back='   + backP
-    + '&bottom=' + bottomP
-    + '&gyroX='  + gyroXv
-    + '&gyroY='  + gyroYv;
+    + '&paciente=' + nombreUsuario
+    + '&espalda=' + backP
+    + '&derecha=' + rightP
+    + '&izquierda=' + leftP
+    + '&angulo=' + angle;
+  
   fetch(url)
     .then(function(r){ return r.json(); })
     .then(function(data) {
@@ -689,9 +694,8 @@ function saveToSheets() {
         updateSheetsBadge('ok');
       }
     })
-    .catch(function(e) { updateSheetsBadge('err', 'sin conexión'); });
+    .catch(function(e) { });
 }
-
 function testSheetsConnection() {
   var url = document.getElementById('scriptURL').value.trim();
   if (!url) { showSheetsTestResult('Pega la URL primero', false); return; }
@@ -813,19 +817,19 @@ function loadDayData(day) {
 function renderHistory(rows) {
   var list = document.getElementById('historyList');
   if (!rows.length) { list.innerHTML = '<div class="empty-state">Sin lecturas para este día</div>'; return; }
-  // Mostrar últimas 30
   var recent = rows.slice(-30).reverse();
   list.innerHTML = '';
   recent.forEach(function(r) {
-    var isHigh = r.back >= pressureThreshold || r.bottom >= pressureThreshold;
+    var isHigh = r.back >= pressureThreshold || r.right >= pressureThreshold || r.left >= pressureThreshold;
     var div = document.createElement('div');
     div.className = 'history-item ' + (isHigh ? 'hi' : 'ok');
     div.innerHTML =
       '<div class="history-time">' + r.time + '</div>' +
       '<div class="history-vals">' +
-        '<span style="color:#93C5FD">B:' + r.back + '</span> ' +
-        '<span style="color:#06B6D4">S:' + r.bottom + '</span> ' +
-        '<span style="color:#94A3B8;font-size:10px">X:' + r.gyroX + ' Y:' + r.gyroY + '</span>' +
+        '<span style="color:#93C5FD">E:' + r.back + '</span> ' +
+        '<span style="color:#06B6D4">R:' + r.right + '</span> ' +
+        '<span style="color:#10B981">L:' + r.left + '</span> ' +
+        '<span style="color:#94A3B8;font-size:10px">A:' + r.angle + '°</span>' +
       '</div>' +
       '<div style="font-size:10px">' + (isHigh ? '🔴' : '✅') + '</div>';
     list.appendChild(div);
@@ -839,43 +843,47 @@ function renderStats(rows) {
     document.getElementById('stat-bottom').textContent = '---';
     return;
   }
-  var backAvg   = Math.round(rows.reduce(function(s,r){return s+r.back},0)   / rows.length);
-  var btAvg     = Math.round(rows.reduce(function(s,r){return s+r.bottom},0) / rows.length);
-  var goodCount = rows.filter(function(r){return r.back < pressureThreshold && r.bottom < pressureThreshold}).length;
-  var goodPct   = Math.round(goodCount / rows.length * 100);
+  var backAvg = Math.round(rows.reduce(function(s,r){return s+(r.back||0)},0) / rows.length);
+  var rightAvg = Math.round(rows.reduce(function(s,r){return s+(r.right||0)},0) / rows.length);
+  var leftAvg = Math.round(rows.reduce(function(s,r){return s+(r.left||0)},0) / rows.length);
+  var goodCount = rows.filter(function(r){return (r.back||0) < pressureThreshold && (r.right||0) < pressureThreshold && (r.left||0) < pressureThreshold}).length;
+  var goodPct = Math.round(goodCount / rows.length * 100);
   document.getElementById('stat-posture').textContent = goodPct + '%';
   document.getElementById('stat-posture').style.color = goodPct >= 60 ? '#10B981' : '#EF4444';
-  document.getElementById('stat-back').textContent    = backAvg;
-  document.getElementById('stat-back').style.color    = backAvg >= pressureThreshold ? '#EF4444' : '#93C5FD';
-  document.getElementById('stat-bottom').textContent  = btAvg;
-  document.getElementById('stat-bottom').style.color  = btAvg >= pressureThreshold ? '#EF4444' : '#06B6D4';
+  document.getElementById('stat-back').textContent = backAvg;
+  document.getElementById('stat-back').style.color = backAvg >= pressureThreshold ? '#EF4444' : '#93C5FD';
+  document.getElementById('stat-bottom').textContent = (rightAvg + leftAvg) / 2;
+  document.getElementById('stat-bottom').style.color = (rightAvg + leftAvg) >= pressureThreshold ? '#EF4444' : '#06B6D4';
 }
 
 function renderChart(rows) {
   var chartEl = document.getElementById('chartBars');
   if (!rows.length) { chartEl.innerHTML = '<div class="empty-state" style="padding:10px 0">Sin datos</div>'; return; }
-  // Agrupar en hasta 8 bloques por hora
   var grouped = {};
   rows.forEach(function(r) {
     var hour = r.time ? r.time.split(':')[0] + 'h' : '?';
-    if (!grouped[hour]) grouped[hour] = {backSum:0, btSum:0, count:0};
-    grouped[hour].backSum += r.back;
-    grouped[hour].btSum   += r.bottom;
+    if (!grouped[hour]) grouped[hour] = {backSum:0, rightSum:0, leftSum:0, count:0};
+    grouped[hour].backSum += (r.back||0);
+    grouped[hour].rightSum += (r.right||0);
+    grouped[hour].leftSum += (r.left||0);
     grouped[hour].count++;
   });
   var keys = Object.keys(grouped).slice(-8);
   chartEl.innerHTML = '';
   keys.forEach(function(k) {
-    var g   = grouped[k];
-    var bA  = Math.round(g.backSum / g.count);
-    var btA = Math.round(g.btSum   / g.count);
-    var bh  = Math.max(4, Math.round(bA/1023*80));
-    var bth = Math.max(4, Math.round(btA/1023*80));
+    var g = grouped[k];
+    var bA = Math.round(g.backSum / g.count);
+    var rA = Math.round(g.rightSum / g.count);
+    var lA = Math.round(g.leftSum / g.count);
+    var bh = Math.max(4, Math.round(bA/20*80));
+    var rh = Math.max(4, Math.round(rA/20*80));
+    var lh = Math.max(4, Math.round(lA/20*80));
     chartEl.innerHTML +=
       '<div class="bar-group">' +
         '<div class="bar-wrap">' +
-          '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>' +
-          '<div class="bar" style="height:'+bth+'px;background:'+(btA>=pressureThreshold?'#DC2626':'#06B6D4')+'"></div>' +
+          '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#93C5FD')+'"></div>' +
+          '<div class="bar" style="height:'+rh+'px;background:'+(rA>=pressureThreshold?'#EF4444':'#06B6D4')+'"></div>' +
+          '<div class="bar" style="height:'+lh+'px;background:'+(lA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>' +
         '</div>' +
         '<div class="bar-lbl">'+k+'</div>' +
       '</div>';
