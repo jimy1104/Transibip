@@ -218,20 +218,27 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     <div class="card">
       <div class="card-title">Back muscles map</div>
       <div style="display:flex;justify-content:center;margin:8px 0">
-        <svg width="160" height="185" viewBox="0 0 160 185">
-          <ellipse cx="80" cy="16" rx="16" ry="18" fill="#475569"/>
-          <ellipse cx="64" cy="16" rx="5" ry="7" fill="#475569"/>
-          <ellipse cx="96" cy="16" rx="5" ry="7" fill="#475569"/>
-          <rect x="73" y="32" width="14" height="12" rx="4" fill="#475569"/>
-          <ellipse id="m-trap-l" cx="48" cy="60" rx="28" ry="13" fill="#334155"/>
-          <ellipse id="m-trap-r" cx="112" cy="60" rx="28" ry="13" fill="#334155"/>
-          <rect id="m-rhom-l" x="32" y="76" width="34" height="20" rx="5" fill="#334155"/>
-          <rect id="m-rhom-r" x="94" y="76" width="34" height="20" rx="5" fill="#334155"/>
-          <rect id="m-lat-l" x="24" y="98" width="40" height="26" rx="6" fill="#334155"/>
-          <rect id="m-lat-r" x="96" y="98" width="40" height="26" rx="6" fill="#334155"/>
-          <rect id="m-erect-l" x="30" y="126" width="32" height="20" rx="5" fill="#334155"/>
-          <rect id="m-erect-r" x="98" y="126" width="32" height="20" rx="5" fill="#334155"/>
-          <rect x="76" y="44" width="8" height="108" rx="3" fill="#1E40AF" id="m-spine"/>
+        <svg width="180" height="200" viewBox="0 0 180 200">
+          <ellipse cx="90" cy="16" rx="16" ry="18" fill="#475569"/>
+          <ellipse cx="74" cy="16" rx="5" ry="7" fill="#475569"/>
+          <ellipse cx="106" cy="16" rx="5" ry="7" fill="#475569"/>
+          <rect x="83" y="32" width="14" height="12" rx="4" fill="#475569"/>
+          <ellipse id="m-trap-l" cx="55" cy="60" rx="30" ry="13" fill="#334155"/>
+          <ellipse id="m-trap-r" cx="125" cy="60" rx="30" ry="13" fill="#334155"/>
+          <rect id="m-rhom-l" x="34" y="76" width="40" height="20" rx="5" fill="#334155"/>
+          <rect id="m-rhom-r" x="106" y="76" width="40" height="20" rx="5" fill="#334155"/>
+          <rect id="m-lat-l" x="26" y="98" width="46" height="28" rx="7" fill="#334155"/>
+          <rect id="m-lat-r" x="108" y="98" width="46" height="28" rx="7" fill="#334155"/>
+          <rect id="m-erect-l" x="34" y="128" width="38" height="22" rx="6" fill="#334155"/>
+          <rect id="m-erect-r" x="108" y="128" width="38" height="22" rx="6" fill="#334155"/>
+          <rect x="86" y="44" width="8" height="116" rx="3" fill="#1E40AF" id="m-spine"/>
+          <!-- Indicadores de celdas en espalda: izquierda/derecha -->
+          <circle id="m-back-cell-l" cx="72" cy="110" r="12" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+          <circle id="m-back-cell-r" cx="108" cy="110" r="12" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+          <text x="72" y="114" font-size="9" fill="#F1F5F9" text-anchor="middle" font-weight="700">E1</text>
+          <text x="108" y="114" font-size="9" fill="#F1F5F9" text-anchor="middle" font-weight="700">E2</text>
+          <text x="54" y="188" font-size="9" fill="#94A3B8" text-anchor="middle">Espalda Izq</text>
+          <text x="126" y="188" font-size="9" fill="#94A3B8" text-anchor="middle">Espalda Der</text>
         </svg>
       </div>
       <div class="legend-row">
@@ -263,12 +270,20 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       </div>
     </div>
 
-    <!-- Sensor espalda -->
+    <!-- Sensor espalda izquierdo -->
     <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor espalda (celda 50kg)</span><div class="fsr-led" id="backLed"></div></div>
+      <div class="fsr-header"><span class="fsr-title">Sensor espalda IZQ (celda)</span><div class="fsr-led" id="backLed"></div></div>
       <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
       <div class="gauge-track"><div class="gauge-fill" id="backFill" style="width:0%;background:#10B981"></div></div>
       <div id="backStatus" class="status-ok">Normal</div>
+    </div>
+
+    <!-- Sensor espalda derecho / nuevo -->
+    <div class="fsr-card">
+      <div class="fsr-header"><span class="fsr-title">Sensor espalda DER (celda nueva)</span><div class="fsr-led" id="backLed2"></div></div>
+      <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal2" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="backFill2" style="width:0%;background:#10B981"></div></div>
+      <div id="backStatus2" class="status-ok">Normal</div>
     </div>
 
     <!-- Sensor asiento izquierdo -->
@@ -299,6 +314,14 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
           <div style="font-size:11px;color:#94A3B8;margin-bottom:4px">POSTURA</div>
           <div id="posturaLabel" style="font-size:18px;font-weight:700;color:#F1F5F9">---</div>
         </div>
+      </div>
+      <div style="margin-top:12px;background:#0F172A;border:1px solid #334155;border-radius:10px;padding:10px 12px">
+        <div class="row" style="margin-bottom:6px">
+          <span style="font-size:11px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Batería ESP32</span>
+          <span id="batteryVal" style="font-size:16px;font-weight:700;color:#10B981;font-family:monospace">---%</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="batteryFill" style="width:0%;background:#10B981"></div></div>
+        <div id="batteryStatus" class="status-ok">Sin lectura</div>
       </div>
     </div>
   </div>
@@ -354,7 +377,8 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="card-title">Presión promedio</div>
       <div class="bars" id="chartBars" style="height:80px"></div>
       <div class="legend-row">
-        <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Espalda</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Espalda Izq</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div>Espalda Der</div>
         <div class="legend-item"><div class="legend-dot" style="background:#06B6D4"></div>Asiento Izq</div>
         <div class="legend-item"><div class="legend-dot" style="background:#818CF8"></div>Asiento Der</div>
       </div>
@@ -401,7 +425,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         <button class="switch on" id="buzzerSwitch" onclick="toggleBuzzer()"></button>
       </div>
       <div class="field-label">Buzzer threshold (0–1023)</div>
-      <input class="input-field" type="number" id="buzzerThresh" value="600" min="0" max="1023">
+      <input class="input-field" type="number" id="buzzerThresh" value="700" min="0" max="1023" oninput="onThreshInput()">
     </div>
 
     
@@ -410,9 +434,10 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="card-title">Device info</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse">
         <tr><td style="color:#94A3B8;padding:5px 0">Board</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ESP32</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Back sensor</td><td style="text-align:right;color:#F1F5F9;font-weight:600">Celda HX711 20kg</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Seat L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711 50kg</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (X/Y)</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Back L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Seat L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (ángulo)</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Battery</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ADC ESP32 / %</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Local + Google Sheets ☁️</td></tr>
       </table>
     </div>
@@ -502,7 +527,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 // ══════════════════════════════════════════════════════
 var connected=false, pressureThreshold=700;
 var sensorInterval=null, gyroInterval=null, saveInterval=null;
-var backP=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true;
+var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0;
 var scriptURL='', selectedDay='', sheetsOk=false;
 var connMode='demo', bleDevice=null, bleChar=null, bleRxChar=null, bleService=null;
 var BLE_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
@@ -567,8 +592,8 @@ function loginAs(id){
   document.getElementById('app').style.display='flex';
   document.getElementById('scriptURL').value=scriptURL;
   pressureThreshold=parseInt(localStorage.getItem('threshold')||'700');
-  document.getElementById('pressureThresh').value=pressureThreshold;
-  document.getElementById('curThresh').textContent=pressureThreshold;
+  var buz=document.getElementById('buzzerThresh');
+  if(buz) buz.value=pressureThreshold;
   refreshPatientBanner();
   updateSheetsBadge(scriptURL?'ok':'off');
 }
@@ -686,17 +711,33 @@ function connectBLE(){
   .catch(function(e){err.textContent='Error: '+e.message;err.style.display='block';});
 }
 
-// ESP32 envía CSV: "pesoE,pesoL,pesoR,angulo,postura(1=sent/0=pie)"
+// ESP32 envía CSV recomendado:
+// NUEVO: "backIzq,backDer,asientoIzq,asientoDer,angulo,postura(1=sent/0=pie),bateriaPct"
+// ANTIGUO compatible: "back,asientoIzq,asientoDer,angulo,postura"
 function onBleData(e){
   var txt=new TextDecoder().decode(e.target.value).trim();
   var p=txt.split(',');
   if(p.length<2) return;
-  backP   = parseFloat(p[0])||0;
-  bottomPL= parseFloat(p[1])||0;
-  bottomPR= p.length>2?(parseFloat(p[2])||0):0;
-  gyroAngle = p.length>3?(parseFloat(p[3])||0):0;
-  posturaSentado = p.length>4?(parseInt(p[4])===1):true;
-  updateSensorUI();updateAngleUI();
+
+  if(p.length>=7){
+    backP      = parseFloat(p[0])||0;
+    backP2     = parseFloat(p[1])||0;
+    bottomPL   = parseFloat(p[2])||0;
+    bottomPR   = parseFloat(p[3])||0;
+    gyroAngle  = parseFloat(p[4])||0;
+    posturaSentado = parseInt(p[5])===1;
+    batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
+  }else{
+    // Formato anterior para que no se rompa si el ESP32 aún no fue actualizado
+    backP      = parseFloat(p[0])||0;
+    backP2     = 0;
+    bottomPL   = parseFloat(p[1])||0;
+    bottomPR   = p.length>2?(parseFloat(p[2])||0):0;
+    gyroAngle  = p.length>3?(parseFloat(p[3])||0):0;
+    posturaSentado = p.length>4?(parseInt(p[4])===1):true;
+    batteryPct = 0;
+  }
+  updateSensorUI();updateAngleUI();updateBatteryUI();
 }
 function onBleDisconnect(){if(connected)doDisconnect();}
 
@@ -752,9 +793,11 @@ function doDisconnect(){
 function startSensors(){
   sensorInterval=setInterval(function(){
     backP=Math.floor(300+Math.random()*723);
+    backP2=Math.floor(250+Math.random()*773);
     bottomPL=Math.floor(200+Math.random()*823);
     bottomPR=Math.floor(200+Math.random()*823);
-    updateSensorUI();
+    batteryPct=Math.max(15,Math.min(100,batteryPct?batteryPct-(Math.random()*0.25):92));
+    updateSensorUI();updateBatteryUI();
   },1500);
   gyroInterval=setInterval(function(){
     gyroAngle=Math.round((Math.random()*60-30)*10)/10;
@@ -763,12 +806,13 @@ function startSensors(){
   },800);
 }
 function stopSensors(){clearInterval(sensorInterval);clearInterval(gyroInterval);}
-function resetSensors(){backP=0;bottomPL=0;bottomPR=0;gyroXv=0;gyroYv=0;updateSensorUI();updateAngleUI();}
+function resetSensors(){backP=0;backP2=0;bottomPL=0;bottomPR=0;gyroAngle=0;batteryPct=0;updateSensorUI();updateAngleUI();updateBatteryUI();}
 
 function updateSensorUI(){
   var th=pressureThreshold;
-  var bH=backP>=th,btHL=bottomPL>=th,btHR=bottomPR>=th;
-  // Espalda
+  var bH=backP>=th,b2H=backP2>=th,btHL=bottomPL>=th,btHR=bottomPR>=th;
+
+  // Espalda Izq
   document.getElementById('backVal').textContent=backP;
   document.getElementById('backVal').style.color=bH?'#EF4444':'#10B981';
   document.getElementById('backFill').style.width=Math.round(backP/1023*100)+'%';
@@ -776,6 +820,16 @@ function updateSensorUI(){
   document.getElementById('backStatus').textContent=bH?'⚠ HIGH PRESSURE':'Normal';
   document.getElementById('backStatus').className=bH?'status-hi':'status-ok';
   document.getElementById('backLed').className='fsr-led'+(bH?' on':'');
+
+  // Espalda Der / nueva celda
+  document.getElementById('backVal2').textContent=backP2;
+  document.getElementById('backVal2').style.color=b2H?'#EF4444':'#10B981';
+  document.getElementById('backFill2').style.width=Math.round(backP2/1023*100)+'%';
+  document.getElementById('backFill2').style.background=b2H?'#EF4444':'#10B981';
+  document.getElementById('backStatus2').textContent=b2H?'⚠ HIGH PRESSURE':'Normal';
+  document.getElementById('backStatus2').className=b2H?'status-hi':'status-ok';
+  document.getElementById('backLed2').className='fsr-led'+(b2H?' on':'');
+
   // Asiento Izq
   document.getElementById('bottomValL').textContent=bottomPL;
   document.getElementById('bottomValL').style.color=btHL?'#EF4444':'#10B981';
@@ -784,6 +838,7 @@ function updateSensorUI(){
   document.getElementById('bottomStatusL').textContent=btHL?'⚠ HIGH PRESSURE':'Normal';
   document.getElementById('bottomStatusL').className=btHL?'status-hi':'status-ok';
   document.getElementById('bottomLedL').className='fsr-led'+(btHL?' on':'');
+
   // Asiento Der
   document.getElementById('bottomValR').textContent=bottomPR;
   document.getElementById('bottomValR').style.color=btHR?'#EF4444':'#10B981';
@@ -792,22 +847,34 @@ function updateSensorUI(){
   document.getElementById('bottomStatusR').textContent=btHR?'⚠ HIGH PRESSURE':'Normal';
   document.getElementById('bottomStatusR').className=btHR?'status-hi':'status-ok';
   document.getElementById('bottomLedR').className='fsr-led'+(btHR?' on':'');
-  // Músculos
-  updateMuscles(bH,btHL||btHR,btHL,btHR);
+
+  // Mapas anatómicos
+  updateMuscles(bH,b2H,btHL,btHR);
 }
 
-function updateMuscles(bH,btH,btHL,btHR){
-  var bc=backP>0?(bH?'#EF4444':'#93C5FD'):'#334155';
-  var bl=backP>0?(bH?'#FCA5A5':'#BFDBFE'):'#475569';
-  var btcL=bottomPL>0?(btHL?'#EF4444':'#93C5FD'):'#334155';
-  var btcR=bottomPR>0?(btHR?'#EF4444':'#93C5FD'):'#334155';
-  ['m-rhom-l','m-rhom-r','m-lat-l','m-lat-r','m-erect-l','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bc)});
-  ['m-trap-l','m-trap-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bl)});
-  document.getElementById('m-spine').setAttribute('fill',bH?'#DC2626':'#1E40AF');
+function updateMuscles(bH,b2H,btHL,btHR){
+  function colorFromValue(v,hi){return v>0?(hi?'#EF4444':'#93C5FD'):'#334155';}
+  function softColorFromValue(v,hi){return v>0?(hi?'#FCA5A5':'#BFDBFE'):'#475569';}
+
+  var backLC=colorFromValue(backP,bH);
+  var backRC=colorFromValue(backP2,b2H);
+  var backLS=softColorFromValue(backP,bH);
+  var backRS=softColorFromValue(backP2,b2H);
+  var btcL=colorFromValue(bottomPL,btHL);
+  var btcR=colorFromValue(bottomPR,btHR);
+
+  ['m-rhom-l','m-lat-l','m-erect-l'].forEach(function(id){document.getElementById(id).setAttribute('fill',backLC)});
+  ['m-rhom-r','m-lat-r','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',backRC)});
+  document.getElementById('m-trap-l').setAttribute('fill',backLS);
+  document.getElementById('m-trap-r').setAttribute('fill',backRS);
+  document.getElementById('m-back-cell-l').setAttribute('fill',backLC);
+  document.getElementById('m-back-cell-r').setAttribute('fill',backRC);
+  document.getElementById('m-spine').setAttribute('fill',(bH||b2H)?'#DC2626':'#1E40AF');
+
   document.getElementById('g-left').setAttribute('fill',btcL);
   document.getElementById('g-right').setAttribute('fill',btcR);
-  document.getElementById('g-med-l').setAttribute('fill',bottomPL>0?(btHL?'#FCA5A5':'#BFDBFE'):'#475569');
-  document.getElementById('g-med-r').setAttribute('fill',bottomPR>0?(btHR?'#FCA5A5':'#BFDBFE'):'#475569');
+  document.getElementById('g-med-l').setAttribute('fill',softColorFromValue(bottomPL,btHL));
+  document.getElementById('g-med-r').setAttribute('fill',softColorFromValue(bottomPR,btHR));
   document.getElementById('g-sacrum').setAttribute('fill',(bottomPL>0||bottomPR>0)?'#06B6D4':'#334155');
 }
 
@@ -820,6 +887,30 @@ function updateAngleUI(){
     pl.textContent=connected?(sent?'SENTADO':'DE PIE'):'---';
     pl.style.color=connected?(sent?'#10B981':'#3B82F6'):'#F1F5F9';
   }
+}
+
+function updateBatteryUI(){
+  var v=document.getElementById('batteryVal');
+  var f=document.getElementById('batteryFill');
+  var s=document.getElementById('batteryStatus');
+  if(!v||!f||!s) return;
+  if(!connected||batteryPct<=0){
+    v.textContent='---%';
+    v.style.color='#94A3B8';
+    f.style.width='0%';
+    f.style.background='#334155';
+    s.textContent='Sin lectura';
+    s.className='status-ok';
+    return;
+  }
+  var pct=Math.round(batteryPct);
+  var low=pct<20;
+  v.textContent=pct+'%';
+  v.style.color=low?'#EF4444':'#10B981';
+  f.style.width=pct+'%';
+  f.style.background=low?'#EF4444':'#10B981';
+  s.textContent=low?'⚠ Batería baja':'Batería normal';
+  s.className=low?'status-hi':'status-ok';
 }
 
 // ══════════════════════════════════════════════════════
@@ -882,7 +973,7 @@ function recordReading(){
   var day=todayStr();
   var key=getHistoryKey()+day;
   var arr;try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}
-  arr.push({time:nowTime(),back:backP,bottomL:bottomPL,bottomR:bottomPR,bottom:(bottomPL+bottomPR)/2,angulo:gyroAngle,postura:posturaSentado?'SENTADO':'DE PIE',patientId:activePatientId||'',patientName:getActivePatientName()});
+  arr.push({time:nowTime(),back:backP,back2:backP2,bottomL:bottomPL,bottomR:bottomPR,bottom:(bottomPL+bottomPR)/2,angulo:gyroAngle,postura:posturaSentado?'SENTADO':'DE PIE',battery:batteryPct,patientId:activePatientId||'',patientName:getActivePatientName()});
   if(arr.length>2000) arr=arr.slice(-2000);
   localStorage.setItem(key,JSON.stringify(arr));
   if(scriptURL) saveToSheets();
@@ -890,7 +981,7 @@ function recordReading(){
 
 function saveToSheets(){
   if(!scriptURL||!connected) return;
-  var url=scriptURL+'?action=write&back='+backP+'&bottomL='+bottomPL+'&bottomR='+bottomPR+'&angulo='+gyroAngle+'&postura='+(posturaSentado?'SENTADO':'DE PIE')+'&patient='+encodeURIComponent(getActivePatientName());
+  var url=scriptURL+'?action=write&back='+backP+'&back2='+backP2+'&bottomL='+bottomPL+'&bottomR='+bottomPR+'&angulo='+gyroAngle+'&postura='+(posturaSentado?'SENTADO':'DE PIE')+'&battery='+batteryPct+'&patient='+encodeURIComponent(getActivePatientName());
   fetch(url).then(function(r){return r.json();}).then(function(d){if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}}).catch(function(){updateSheetsBadge('err','sin conexión');});
 }
 
@@ -964,10 +1055,10 @@ function renderHistory(rows){
   if(!rows.length){list.innerHTML='<div class="empty-state">Sin lecturas para este día</div>';return;}
   var recent=rows.slice(-30).reverse();list.innerHTML='';
   recent.forEach(function(r){
-    var isHigh=r.back>=pressureThreshold||(r.bottomL||0)>=pressureThreshold||(r.bottomR||0)>=pressureThreshold;
+    var isHigh=r.back>=pressureThreshold||(r.back2||0)>=pressureThreshold||(r.bottomL||0)>=pressureThreshold||(r.bottomR||0)>=pressureThreshold;
     var div=document.createElement('div');div.className='history-item '+(isHigh?'hi':'ok');
     div.innerHTML='<div><div class="history-time">'+r.time+'</div></div>'+
-      '<div class="history-vals"><span style="color:#93C5FD">E:'+r.back+'</span> <span style="color:#06B6D4">AI:'+(r.bottomL||r.bottom||0)+'</span> <span style="color:#818CF8">AD:'+(r.bottomR||0)+'</span></div>'+'<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(r.postura||'')+'  '+(r.angulo!=null?r.angulo+'°':'')+' </div>'+
+      '<div class="history-vals"><span style="color:#93C5FD">EI:'+r.back+'</span> <span style="color:#F59E0B">ED:'+(r.back2||0)+'</span> <span style="color:#06B6D4">AI:'+(r.bottomL||r.bottom||0)+'</span> <span style="color:#818CF8">AD:'+(r.bottomR||0)+'</span></div>'+'<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(r.postura||'')+'  '+(r.angulo!=null?r.angulo+'°':'')+'  '+(r.battery?('🔋 '+Math.round(r.battery)+'%'):'')+'</div>'+
       '<div style="font-size:10px">'+(isHigh?'🔴':'✅')+'</div>';
     list.appendChild(div);
   });
@@ -975,9 +1066,9 @@ function renderHistory(rows){
 
 function renderStats(rows){
   if(!rows.length){document.getElementById('stat-posture').textContent='--%';document.getElementById('stat-back').textContent='---';document.getElementById('stat-bottom').textContent='---';return;}
-  var bA=Math.round(rows.reduce(function(s,r){return s+r.back},0)/rows.length);
+  var bA=Math.round(rows.reduce(function(s,r){return s+((r.back||0)+(r.back2||0))/2},0)/rows.length);
   var btA=Math.round(rows.reduce(function(s,r){return s+((r.bottomL||0)+(r.bottomR||r.bottom||0))/2},0)/rows.length);
-  var g=rows.filter(function(r){return r.back<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||r.bottom||0)<pressureThreshold}).length;
+  var g=rows.filter(function(r){return (r.back||0)<pressureThreshold&&(r.back2||0)<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||r.bottom||0)<pressureThreshold}).length;
   var gp=Math.round(g/rows.length*100);
   document.getElementById('stat-posture').textContent=gp+'%';
   document.getElementById('stat-posture').style.color=gp>=60?'#10B981':'#EF4444';
@@ -991,13 +1082,22 @@ function renderChart(rows){
   var el=document.getElementById('chartBars');
   if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos</div>';return;}
   var g={};
-  rows.forEach(function(r){var h=r.time?r.time.split(':')[0]+'h':'?';if(!g[h]){g[h]={bs:0,bls:0,brs:0,c:0};}g[h].bs+=r.back;g[h].bls+=(r.bottomL||0);g[h].brs+=(r.bottomR||r.bottom||0);g[h].c++;});
+  rows.forEach(function(r){
+    var h=r.time?r.time.split(':')[0]+'h':'?';
+    if(!g[h]){g[h]={bs:0,b2s:0,bls:0,brs:0,c:0};}
+    g[h].bs+=(r.back||0);
+    g[h].b2s+=(r.back2||0);
+    g[h].bls+=(r.bottomL||0);
+    g[h].brs+=(r.bottomR||r.bottom||0);
+    g[h].c++;
+  });
   el.innerHTML='';
   Object.keys(g).slice(-8).forEach(function(k){
-    var bA=Math.round(g[k].bs/g[k].c),blA=Math.round(g[k].bls/g[k].c),brA=Math.round(g[k].brs/g[k].c);
-    var bh=Math.max(4,Math.round(bA/1023*80)),blh=Math.max(4,Math.round(blA/1023*80)),brh=Math.max(4,Math.round(brA/1023*80));
+    var bA=Math.round(g[k].bs/g[k].c),b2A=Math.round(g[k].b2s/g[k].c),blA=Math.round(g[k].bls/g[k].c),brA=Math.round(g[k].brs/g[k].c);
+    var bh=Math.max(4,Math.round(bA/1023*80)),b2h=Math.max(4,Math.round(b2A/1023*80)),blh=Math.max(4,Math.round(blA/1023*80)),brh=Math.max(4,Math.round(brA/1023*80));
     el.innerHTML+='<div class="bar-group"><div class="bar-wrap">'+
       '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>'+
+      '<div class="bar" style="height:'+b2h+'px;background:'+(b2A>=pressureThreshold?'#EF4444':'#F59E0B')+'"></div>'+
       '<div class="bar" style="height:'+blh+'px;background:'+(blA>=pressureThreshold?'#DC2626':'#06B6D4')+'"></div>'+
       '<div class="bar" style="height:'+brh+'px;background:'+(brA>=pressureThreshold?'#DC2626':'#818CF8')+'"></div>'+
       '</div><div class="bar-lbl">'+k+'</div></div>';
@@ -1007,16 +1107,19 @@ function renderChart(rows){
 function renderInsights(rows){
   var el=document.getElementById('insights');
   if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>';return;}
-  var bA=Math.round(rows.reduce(function(s,r){return s+r.back},0)/rows.length);
+  var bA=Math.round(rows.reduce(function(s,r){return s+(r.back||0)},0)/rows.length);
+  var b2A=Math.round(rows.reduce(function(s,r){return s+(r.back2||0)},0)/rows.length);
   var blA=Math.round(rows.reduce(function(s,r){return s+(r.bottomL||0)},0)/rows.length);
   var brA=Math.round(rows.reduce(function(s,r){return s+(r.bottomR||r.bottom||0)},0)/rows.length);
-  var g=rows.filter(function(r){return r.back<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||r.bottom||0)<pressureThreshold}).length;
+  var g=rows.filter(function(r){return (r.back||0)<pressureThreshold&&(r.back2||0)<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||r.bottom||0)<pressureThreshold}).length;
   var gp=Math.round(g/rows.length*100);
   var diff=Math.abs(blA-brA);
+  var diffBack=Math.abs(bA-b2A);
   function tip(i,t){return'<div class="tip-row"><span class="tip-icon">'+i+'</span><span class="tip-text">'+t+'</span></div>';}
   var html='';
   html+=tip(gp>=70?'✅':'⚠️',gp>=70?'Buena postura el '+gp+'% del tiempo. ¡Excelente!':'Postura correcta solo el '+gp+'%. Descansa cada 30 min.');
-  html+=tip(bA<pressureThreshold?'✅':'🔴',bA<pressureThreshold?'Presión en espalda normal.':'Presión alta en espalda. Ajusta soporte lumbar.');
+  html+=tip((bA<pressureThreshold&&b2A<pressureThreshold)?'✅':'🔴',(bA<pressureThreshold&&b2A<pressureThreshold)?'Presión en espalda normal.':'Presión alta en espalda. Ajusta soporte dorsal/lumbar.');
+  html+=tip(diffBack<120?'✅':'⚠️',diffBack<120?'Presión de espalda equilibrada entre izquierda y derecha.':'Desequilibrio en espalda: izquierda ('+bA+') vs derecha ('+b2A+'). Revisa alineación del tronco.');
   html+=tip(diff<100?'✅':'⚠️',diff<100?'Distribución del peso simétrica entre glúteos.':'Desequilibrio entre glúteo izquierdo ('+blA+') y derecho ('+brA+'). Intenta sentarte más centrado.');
   el.innerHTML=html;
 }
@@ -1025,9 +1128,9 @@ function renderInsights(rows){
 // SETTINGS
 // ══════════════════════════════════════════════════════
 function toggleBuzzer(){document.getElementById('buzzerSwitch').classList.toggle('on');}
-function onThreshInput(){var v=parseInt(document.getElementById('pressureThresh').value)||700;document.getElementById('curThresh').textContent=v;document.getElementById('threshLabel').textContent=v>=700?'Strict':v>=400?'Moderate':'Relaxed';}
+function onThreshInput(){var v=parseInt(document.getElementById('buzzerThresh').value)||700;pressureThreshold=Math.max(0,Math.min(1023,v));}
 function saveSettings(){
-  var v=parseInt(document.getElementById('pressureThresh').value)||700;
+  var v=parseInt(document.getElementById('buzzerThresh').value)||700;
   var url=document.getElementById('scriptURL').value.trim();
   pressureThreshold=Math.max(0,Math.min(1023,v));
   scriptURL=url;
@@ -1062,5 +1165,4 @@ window.onload=function(){
 </script>
 </body>
 </html>
-
 
