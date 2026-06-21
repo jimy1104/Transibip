@@ -32,6 +32,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .gauge-fill{height:8px;border-radius:4px;transition:width .5s}
 .status-ok{color:#94A3B8;font-size:10px}
 .status-hi{color:#EF4444;font-size:10px;font-weight:600}
+.threshold-note{font-size:10px;color:#64748B;margin-top:3px}
 .crosshair{width:90px;height:90px;border-radius:50%;background:#0F172A;border:1px solid #334155;position:relative;overflow:hidden;flex-shrink:0}
 .hline{position:absolute;left:0;right:0;top:50%;height:1px;background:#334155}
 .vline{position:absolute;top:0;bottom:0;left:50%;width:1px;background:#334155}
@@ -458,7 +459,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         </div>
         <button class="switch on" id="buzzerSwitch" onclick="toggleBuzzer()"></button>
       </div>
-      <div class="field-label">Buzzer threshold / alerta (kg)</div>
+      <div class="field-label">Umbral manual si no hay peso (kg)</div>
       <input class="input-field" type="number" id="buzzerThresh" value="0.700" min="0" max="25" step="0.001" oninput="onThreshInput()">
     </div>
 
@@ -579,6 +580,132 @@ function fmtKg(v){v=Number(v)||0;if(Math.abs(v)<0.0005)v=0;return v.toFixed(3)+'
 function roundKg(v){return Math.round((Number(v)||0)*1000)/1000;}
 function normalizeThreshold(v){v=parseFloat(v);if(isNaN(v)||v<=0)v=0.700;if(v>25)v=v/1000;return Math.max(0,Math.min(25,v));}
 function postureFromAngleAndMsg(msg){msg=(msg||'').toUpperCase();if(msg.indexOf('SIN USUARIO')>=0)return 'SIN USUARIO';if(Math.abs(gyroAngle)<=12)return 'SENTADO';return gyroAngle>0?'INCLINADO +Y':'INCLINADO -Y';}
+
+// ══════════════════════════════════════════════════════
+// UMBRALES DINÁMICOS + FILTRO ANTI-PICOS
+// ══════════════════════════════════════════════════════
+// The app no longer turns red at 0.700 kg if the patient weighs 50 kg.
+// It calculates separate thresholds for seat and back using patient weight.
+var sensorFilterState={
+  backP:{last:0,candidate:null,count:0},
+  backP2:{last:0,candidate:null,count:0},
+  bottomPL:{last:0,candidate:null,count:0},
+  bottomPR:{last:0,candidate:null,count:0}
+};
+
+function getActivePatientWeightKg(){
+  var v=parseFloat(document.getElementById('pesoInput') ? document.getElementById('pesoInput').value : '');
+  if(v>5 && v<200) return v;
+
+  if(activePatientId){
+    var pts=getPatients();
+    var p=pts.find(function(x){return x.id===activePatientId;});
+    if(p){
+      var wp=parseFloat(p.peso);
+      if(wp>5 && wp<200) return wp;
+    }
+  }
+  return 0;
+}
+
+function getPressureLimits(){
+  var w=getActivePatientWeightKg();
+
+  // Fallback when the app does not know the patient weight yet.
+  if(!w){
+    return {
+      weight:0,
+      backWarn:pressureThreshold,
+      backSevere:pressureThreshold*1.6,
+      seatWarn:pressureThreshold,
+      seatSevere:pressureThreshold*1.6,
+      backDiff:1.0,
+      seatDiff:2.0,
+      dynamic:false
+    };
+  }
+
+  // Same logic as the ESP32:
+  // seat load ≈ 60% of body weight, split in 2 ischial cells
+  // back load ≈ 15% of body weight, split in 2 T10 back cells
+  var seat=w*0.60;
+  var back=w*0.15;
+
+  return {
+    weight:w,
+    seatWarn:Math.max(3.0,(seat/2.0)*1.30),
+    seatSevere:Math.max(4.5,(seat/2.0)*1.60),
+    backWarn:Math.max(1.5,(back/2.0)*1.50),
+    backSevere:Math.max(2.5,(back/2.0)*1.90),
+    seatDiff:Math.max(2.0,seat*0.20),
+    backDiff:Math.max(1.0,back*0.30),
+    dynamic:true
+  };
+}
+
+function pctByLimit(v,limit){
+  limit=Number(limit)||1;
+  return Math.max(0,Math.min(100,Math.round((Number(v)||0)/(limit*1.25)*100)));
+}
+
+function isBadNumber(v){
+  return isNaN(v)||!isFinite(v);
+}
+
+function cleanSensorKg(v){
+  v=parseFloat(v);
+  if(isBadNumber(v)) return 0;
+  if(Math.abs(v)<0.005) return 0;
+  if(v<0) return 0;
+  if(v>25) return 25;
+  return Math.round(v*1000)/1000;
+}
+
+function filterSensorKg(name,next){
+  next=cleanSensorKg(next);
+  var st=sensorFilterState[name]||{last:0,candidate:null,count:0};
+  var last=st.last||0;
+  var jump=Math.abs(next-last);
+
+  // Reject a single random spike, common with a floating HX711 wire.
+  // If the spike repeats for 3 packets, accept it as real.
+  var suspicious=(last<1.0 && next>5.0) || (jump>4.0 && next>last*2.5+1.0);
+
+  if(suspicious){
+    if(st.candidate!==null && Math.abs(next-st.candidate)<1.0){
+      st.count++;
+    }else{
+      st.candidate=next;
+      st.count=1;
+    }
+
+    sensorFilterState[name]=st;
+
+    if(st.count<3){
+      return st.last;
+    }
+  }
+
+  st.last=next;
+  st.candidate=null;
+  st.count=0;
+  sensorFilterState[name]=st;
+  return next;
+}
+
+function resetFilterState(){
+  Object.keys(sensorFilterState).forEach(function(k){
+    sensorFilterState[k]={last:0,candidate:null,count:0};
+  });
+}
+
+function anyHighByLimits(r){
+  var lim=getPressureLimits();
+  return (r.back||0)>=lim.backWarn ||
+         (r.back2||0)>=lim.backWarn ||
+         (r.bottomL||0)>=lim.seatWarn ||
+         (r.bottomR||0)>=lim.seatWarn;
+}
 
 // ══════════════════════════════════════════════════════
 // AUTH HELPERS
@@ -757,48 +884,53 @@ function connectBLE(){
 }
 
 // ESP32 envía CSV recomendado:
-// NUEVO: "backIzq,backDer,asientoIzq,asientoDer,angulo,postura(1=sent/0=pie),bateriaPct"
-// ANTIGUO compatible: "back,asientoIzq,asientoDer,angulo,postura"
+// NUEVO: "SeatL,SeatR,BackB1,BackB2,Y,TiempoMin,BAT,ALERTA,MENSAJE,MOTOR"
+// ANTIGUO compatible: "B1,B2,L,R,angle,posture,battery"
 function onBleData(e){
   var txt=new TextDecoder().decode(e.target.value).trim();
   var p=txt.split(',');
   if(p.length<2) return;
 
-  // Formato ESP32 en kg con 3 decimales:
-  // B1kg,B2kg,Lkg,Rkg,anguloY,totalKg,bateria,alerta,mensaje,motor
+  // Recommended TransiBip format:
+  // SeatL,SeatR,BackB1,BackB2,Y,TiempoMin,BAT,ALERTA,MENSAJE,MOTOR
   if(p.length>=8){
-    backP      = parseFloat(p[0])||0;
-    backP2     = parseFloat(p[1])||0;
-    bottomPL   = parseFloat(p[2])||0;
-    bottomPR   = parseFloat(p[3])||0;
+    bottomPL   = filterSensorKg('bottomPL', p[0]);
+    bottomPR   = filterSensorKg('bottomPR', p[1]);
+    backP      = filterSensorKg('backP', p[2]);
+    backP2     = filterSensorKg('backP2', p[3]);
+
     gyroAngle  = parseFloat(p[4])||0;
     batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
     var msg=(p[8]||'');
     deviceMessage=msg;
     posturaSentado = Math.abs(gyroAngle)<=12 && msg.toUpperCase().indexOf('SIN USUARIO')<0;
   }
-  // Formato anterior: B1,B2,L,R,angulo,postura,bateria
+  // Old format compatible: B1,B2,L,R,angle,posture,battery
   else if(p.length>=7){
-    backP      = parseFloat(p[0])||0;
-    backP2     = parseFloat(p[1])||0;
-    bottomPL   = parseFloat(p[2])||0;
-    bottomPR   = parseFloat(p[3])||0;
+    backP      = filterSensorKg('backP', p[0]);
+    backP2     = filterSensorKg('backP2', p[1]);
+    bottomPL   = filterSensorKg('bottomPL', p[2]);
+    bottomPR   = filterSensorKg('bottomPR', p[3]);
+
     gyroAngle  = parseFloat(p[4])||0;
     deviceMessage="";
     posturaSentado = Math.abs(gyroAngle)<=12;
     batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
   }else{
-    // Formato antiguo: back,seatL,seatR,angle,posture
-    backP      = parseFloat(p[0])||0;
+    // Very old format: back,seatL,seatR,angle,posture
+    backP      = filterSensorKg('backP', p[0]);
     backP2     = 0;
-    bottomPL   = parseFloat(p[1])||0;
-    bottomPR   = p.length>2?(parseFloat(p[2])||0):0;
+    bottomPL   = filterSensorKg('bottomPL', p[1]);
+    bottomPR   = p.length>2 ? filterSensorKg('bottomPR', p[2]) : 0;
     gyroAngle  = p.length>3?(parseFloat(p[3])||0):0;
     deviceMessage="";
     posturaSentado = p.length>4?(parseInt(p[4])===1):true;
     batteryPct = 0;
   }
-  updateSensorUI();updateAngleUI();updateBatteryUI();
+
+  updateSensorUI();
+  updateAngleUI();
+  updateBatteryUI();
 }
 function onBleDisconnect(){if(connected)doDisconnect();}
 
@@ -867,49 +999,45 @@ function startSensors(){
   },800);
 }
 function stopSensors(){clearInterval(sensorInterval);clearInterval(gyroInterval);}
-function resetSensors(){backP=0;backP2=0;bottomPL=0;bottomPR=0;gyroAngle=0;batteryPct=0;deviceMessage="";updateSensorUI();updateAngleUI();updateBatteryUI();}
+function resetSensors(){
+  backP=0;backP2=0;bottomPL=0;bottomPR=0;gyroAngle=0;batteryPct=0;deviceMessage="";
+  resetFilterState();
+  updateSensorUI();updateAngleUI();updateBatteryUI();
+}
 
 function updateSensorUI(){
-  var th=pressureThreshold;
-  var bH=backP>=th,b2H=backP2>=th,btHL=bottomPL>=th,btHR=bottomPR>=th;
+  var lim=getPressureLimits();
 
-  // Espalda Izq
-  document.getElementById('backVal').textContent=fmtKg(backP);
-  document.getElementById('backVal').style.color=bH?'#EF4444':'#10B981';
-  document.getElementById('backFill').style.width=sensorPct(backP)+'%';
-  document.getElementById('backFill').style.background=bH?'#EF4444':'#10B981';
-  document.getElementById('backStatus').textContent=bH?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('backStatus').className=bH?'status-hi':'status-ok';
-  document.getElementById('backLed').className='fsr-led'+(bH?' on':'');
+  var bH=backP>=lim.backWarn, b2H=backP2>=lim.backWarn;
+  var btHL=bottomPL>=lim.seatWarn, btHR=bottomPR>=lim.seatWarn;
 
-  // Espalda Der / nueva celda
-  document.getElementById('backVal2').textContent=fmtKg(backP2);
-  document.getElementById('backVal2').style.color=b2H?'#EF4444':'#10B981';
-  document.getElementById('backFill2').style.width=sensorPct(backP2)+'%';
-  document.getElementById('backFill2').style.background=b2H?'#EF4444':'#10B981';
-  document.getElementById('backStatus2').textContent=b2H?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('backStatus2').className=b2H?'status-hi':'status-ok';
-  document.getElementById('backLed2').className='fsr-led'+(b2H?' on':'');
+  function statusText(isHigh, val, warn, severe){
+    if(val>=severe) return '🔴 SEVERE > '+fmtKg(severe);
+    if(isHigh) return '⚠ HIGH > '+fmtKg(warn);
+    return lim.dynamic ? 'Normal < '+fmtKg(warn) : 'Normal';
+  }
 
-  // Asiento Izq
-  document.getElementById('bottomValL').textContent=fmtKg(bottomPL);
-  document.getElementById('bottomValL').style.color=btHL?'#EF4444':'#10B981';
-  document.getElementById('bottomFillL').style.width=sensorPct(bottomPL)+'%';
-  document.getElementById('bottomFillL').style.background=btHL?'#EF4444':'#10B981';
-  document.getElementById('bottomStatusL').textContent=btHL?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('bottomStatusL').className=btHL?'status-hi':'status-ok';
-  document.getElementById('bottomLedL').className='fsr-led'+(btHL?' on':'');
+  function setCell(val,isHigh,warn,severe,valId,fillId,statusId,ledId){
+    var el=document.getElementById(valId);
+    var fill=document.getElementById(fillId);
+    var st=document.getElementById(statusId);
+    var led=document.getElementById(ledId);
+    if(!el||!fill||!st||!led) return;
 
-  // Asiento Der
-  document.getElementById('bottomValR').textContent=fmtKg(bottomPR);
-  document.getElementById('bottomValR').style.color=btHR?'#EF4444':'#10B981';
-  document.getElementById('bottomFillR').style.width=sensorPct(bottomPR)+'%';
-  document.getElementById('bottomFillR').style.background=btHR?'#EF4444':'#10B981';
-  document.getElementById('bottomStatusR').textContent=btHR?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('bottomStatusR').className=btHR?'status-hi':'status-ok';
-  document.getElementById('bottomLedR').className='fsr-led'+(btHR?' on':'');
+    el.textContent=fmtKg(val);
+    el.style.color=isHigh?'#EF4444':'#10B981';
+    fill.style.width=pctByLimit(val,warn)+'%';
+    fill.style.background=isHigh?'#EF4444':'#10B981';
+    st.textContent=statusText(isHigh,val,warn,severe);
+    st.className=isHigh?'status-hi':'status-ok';
+    led.className='fsr-led'+(isHigh?' on':'');
+  }
 
-  // Mapas anatómicos
+  setCell(backP,bH,lim.backWarn,lim.backSevere,'backVal','backFill','backStatus','backLed');
+  setCell(backP2,b2H,lim.backWarn,lim.backSevere,'backVal2','backFill2','backStatus2','backLed2');
+  setCell(bottomPL,btHL,lim.seatWarn,lim.seatSevere,'bottomValL','bottomFillL','bottomStatusL','bottomLedL');
+  setCell(bottomPR,btHR,lim.seatWarn,lim.seatSevere,'bottomValR','bottomFillR','bottomStatusR','bottomLedR');
+
   updateMuscles(bH,b2H,btHL,btHR);
 }
 
@@ -980,6 +1108,7 @@ function updateBatteryUI(){
 function enviarPeso(){
   var peso=parseFloat(document.getElementById('pesoInput').value);
   if(!peso||peso<=0){alert('Ingresa un peso válido');return;}
+
   if(connMode==='bt'&&bleRxChar){
     var data='PESO='+peso;
     var buf=new ArrayBuffer(data.length);
@@ -989,12 +1118,17 @@ function enviarPeso(){
   } else {
     alert('Demo — peso registrado: '+peso+' kg');
   }
+
   // Guardar peso en el perfil del paciente
   if(activePatientId){
     var pts=getPatients();
     pts=pts.map(function(p){return p.id===activePatientId?Object.assign({},p,{peso:String(peso)}):p;});
     savePatients(pts);
+    refreshPatientBanner();
   }
+
+  resetFilterState();
+  updateSensorUI();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1028,12 +1162,12 @@ function avgRows(rows,key){if(!rows||!rows.length)return 0;return roundKg(rows.r
 function avgBack(rows){if(!rows||!rows.length)return 0;return roundKg(rows.reduce(function(s,r){return s+((parseFloat(r.back)||0)+(parseFloat(r.back2)||0))/2;},0)/rows.length);}
 function getChartData(){if(currentPeriod==='day'){var rows=allDaysData[selectedDay]||[];var g={};rows.forEach(function(r){var h=r.time?String(r.time).split(':')[0]:'00';if(!g[h])g[h]={back:0,back2:0,bottomL:0,bottomR:0,c:0};g[h].back+=(r.back||0);g[h].back2+=(r.back2||0);g[h].bottomL+=(r.bottomL||0);g[h].bottomR+=(r.bottomR||0);g[h].c++;});return Object.keys(g).sort(function(a,b){return parseInt(a)-parseInt(b);}).map(function(k){var x=g[k];return{label:k+'h',back:roundKg(x.back/x.c),back2:roundKg(x.back2/x.c),bottomL:roundKg(x.bottomL/x.c),bottomR:roundKg(x.bottomR/x.c)};});}if(currentPeriod==='week'){return getLast7Days().map(function(d){var rows=allDaysData[d]||[];if(!rows.length)return{label:formatDayLabel(d),back:0,back2:0,bottomL:0,bottomR:0,noData:true};return{label:formatDayLabel(d),back:avgRows(rows,'back'),back2:avgRows(rows,'back2'),bottomL:avgRows(rows,'bottomL'),bottomR:avgRows(rows,'bottomR')};});}if(currentPeriod==='month'){var now=new Date(),year=now.getFullYear(),month=now.getMonth();var weeks={W1:[],W2:[],W3:[],W4:[],W5:[]};allDaysList.forEach(function(d){var dd=new Date(d+'T00:00:00');if(dd.getFullYear()!==year||dd.getMonth()!==month)return;var wk='W'+Math.ceil(dd.getDate()/7);weeks[wk]=(weeks[wk]||[]).concat(allDaysData[d]||[]);});return ['W1','W2','W3','W4','W5'].map(function(w){var rows=weeks[w]||[];if(!rows.length)return{label:w,back:0,back2:0,bottomL:0,bottomR:0,noData:true};return{label:w,back:avgRows(rows,'back'),back2:avgRows(rows,'back2'),bottomL:avgRows(rows,'bottomL'),bottomR:avgRows(rows,'bottomR')};});}var months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];var yearNow=new Date().getFullYear();var buckets={};months.forEach(function(m,i){buckets[i]=[];});allDaysList.forEach(function(d){var dd=new Date(d+'T00:00:00');if(dd.getFullYear()!==yearNow)return;buckets[dd.getMonth()]=buckets[dd.getMonth()].concat(allDaysData[d]||[]);});return months.map(function(m,i){var rows=buckets[i]||[];if(!rows.length)return{label:m,back:0,back2:0,bottomL:0,bottomR:0,noData:true};return{label:m,back:avgRows(rows,'back'),back2:avgRows(rows,'back2'),bottomL:avgRows(rows,'bottomL'),bottomR:avgRows(rows,'bottomR')};});}
 function hexToRgba(hex,a){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
-function drawChart(){var canvas=document.getElementById('mainChart');if(!canvas)return;var rect=canvas.getBoundingClientRect();var ratio=window.devicePixelRatio||1;var W=Math.max(300,rect.width||360),H=180;canvas.width=W*ratio;canvas.height=H*ratio;canvas.style.height=H+'px';var ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,W,H);var data=getChartData();var PAD_L=34,PAD_R=10,PAD_T=12,PAD_B=24,cW=W-PAD_L-PAD_R,cH=H-PAD_T-PAD_B;var maxVal=Math.max(pressureThreshold*1.15,0.500);data.forEach(function(d){maxVal=Math.max(maxVal,d.back||0,d.back2||0,d.bottomL||0,d.bottomR||0);});maxVal=Math.ceil(maxVal*2)/2;if(maxVal<0.500)maxVal=0.500;function yOf(v){return PAD_T+cH*(1-Math.min(v,maxVal)/maxVal);}function xOf(i){return PAD_L+(data.length===1?cW/2:i*(cW/(data.length>1?data.length-1:1)));}ctx.font='9px sans-serif';ctx.textAlign='right';ctx.lineWidth=1;[0,0.25,0.5,0.75,1].forEach(function(fr){var val=Math.round(maxVal*fr);var y=yOf(val);ctx.beginPath();ctx.strokeStyle='#243247';ctx.moveTo(PAD_L,y);ctx.lineTo(W-PAD_R,y);ctx.stroke();ctx.fillStyle='#64748B';ctx.fillText(roundKg(val).toFixed(3),PAD_L-5,y+3);});var thY=yOf(pressureThreshold);ctx.beginPath();ctx.strokeStyle='rgba(239,68,68,.45)';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.moveTo(PAD_L,thY);ctx.lineTo(W-PAD_R,thY);ctx.stroke();ctx.setLineDash([]);if(!data.length){ctx.fillStyle='#475569';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('Sin datos para este período',W/2,H/2);return;}function drawSeries(key,color,alpha){ctx.beginPath();data.forEach(function(d,i){var x=xOf(i),y=yOf(d[key]||0);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.lineTo(xOf(data.length-1),PAD_T+cH);ctx.lineTo(xOf(0),PAD_T+cH);ctx.closePath();ctx.fillStyle=hexToRgba(color,alpha);ctx.fill();ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';data.forEach(function(d,i){var x=xOf(i),y=yOf(d[key]||0);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();data.forEach(function(d,i){if(d.noData)return;ctx.beginPath();ctx.arc(xOf(i),yOf(d[key]||0),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});}drawSeries('back','#10B981',0.11);drawSeries('back2','#F59E0B',0.10);drawSeries('bottomL','#06B6D4',0.09);drawSeries('bottomR','#818CF8',0.09);ctx.fillStyle='#64748B';ctx.font='9px sans-serif';ctx.textAlign='center';var skip=Math.max(1,Math.floor(data.length/7));data.forEach(function(d,i){if(i%skip===0||i===data.length-1)ctx.fillText(d.label,xOf(i),H-8);});canvas._chartData=data;canvas._chartPad={L:PAD_L,R:PAD_R,T:PAD_T,B:PAD_B,W:cW,H:cH,step:cW/(data.length>1?data.length-1:1)};}
+function drawChart(){var canvas=document.getElementById('mainChart');if(!canvas)return;var rect=canvas.getBoundingClientRect();var ratio=window.devicePixelRatio||1;var W=Math.max(300,rect.width||360),H=180;canvas.width=W*ratio;canvas.height=H*ratio;canvas.style.height=H+'px';var ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,W,H);var data=getChartData();var PAD_L=34,PAD_R=10,PAD_T=12,PAD_B=24,cW=W-PAD_L-PAD_R,cH=H-PAD_T-PAD_B;var lim=getPressureLimits();var chartThreshold=Math.max(lim.backWarn,lim.seatWarn);var maxVal=Math.max(chartThreshold*1.15,0.500);data.forEach(function(d){maxVal=Math.max(maxVal,d.back||0,d.back2||0,d.bottomL||0,d.bottomR||0);});maxVal=Math.ceil(maxVal*2)/2;if(maxVal<0.500)maxVal=0.500;function yOf(v){return PAD_T+cH*(1-Math.min(v,maxVal)/maxVal);}function xOf(i){return PAD_L+(data.length===1?cW/2:i*(cW/(data.length>1?data.length-1:1)));}ctx.font='9px sans-serif';ctx.textAlign='right';ctx.lineWidth=1;[0,0.25,0.5,0.75,1].forEach(function(fr){var val=Math.round(maxVal*fr);var y=yOf(val);ctx.beginPath();ctx.strokeStyle='#243247';ctx.moveTo(PAD_L,y);ctx.lineTo(W-PAD_R,y);ctx.stroke();ctx.fillStyle='#64748B';ctx.fillText(roundKg(val).toFixed(3),PAD_L-5,y+3);});var thY=yOf(chartThreshold);ctx.beginPath();ctx.strokeStyle='rgba(239,68,68,.45)';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.moveTo(PAD_L,thY);ctx.lineTo(W-PAD_R,thY);ctx.stroke();ctx.setLineDash([]);if(!data.length){ctx.fillStyle='#475569';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('Sin datos para este período',W/2,H/2);return;}function drawSeries(key,color,alpha){ctx.beginPath();data.forEach(function(d,i){var x=xOf(i),y=yOf(d[key]||0);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.lineTo(xOf(data.length-1),PAD_T+cH);ctx.lineTo(xOf(0),PAD_T+cH);ctx.closePath();ctx.fillStyle=hexToRgba(color,alpha);ctx.fill();ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';data.forEach(function(d,i){var x=xOf(i),y=yOf(d[key]||0);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();data.forEach(function(d,i){if(d.noData)return;ctx.beginPath();ctx.arc(xOf(i),yOf(d[key]||0),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});}drawSeries('back','#10B981',0.11);drawSeries('back2','#F59E0B',0.10);drawSeries('bottomL','#06B6D4',0.09);drawSeries('bottomR','#818CF8',0.09);ctx.fillStyle='#64748B';ctx.font='9px sans-serif';ctx.textAlign='center';var skip=Math.max(1,Math.floor(data.length/7));data.forEach(function(d,i){if(i%skip===0||i===data.length-1)ctx.fillText(d.label,xOf(i),H-8);});canvas._chartData=data;canvas._chartPad={L:PAD_L,R:PAD_R,T:PAD_T,B:PAD_B,W:cW,H:cH,step:cW/(data.length>1?data.length-1:1)};}
 function renderDaySelector(days){var sel=document.getElementById('daySelector');if(!sel) return;if(!days.length){sel.innerHTML='<span style="font-size:12px;color:#475569">Sin días registrados</span>';return;}sel.innerHTML='';days.forEach(function(d){var chip=document.createElement('button');chip.className='day-chip'+(d===selectedDay?' active':'');chip.textContent=formatDayLabel(d);chip.onclick=function(){selectedDay=d;document.querySelectorAll('.day-chip').forEach(function(c){c.classList.remove('active')});chip.classList.add('active');drawChart();var rows=allDaysData[d]||[];document.getElementById('historyTitle').textContent='Lecturas — '+d;renderHistory(rows);renderStats(rows);renderInsights(rows);};sel.appendChild(chip);});}
 function formatDayLabel(s){var p=String(s).split('-');if(p.length<3)return s;var m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return p[2]+' '+m[parseInt(p[1])-1];}
-function renderHistory(rows){var list=document.getElementById('historyList');if(!rows.length){list.innerHTML='<div class="empty-state">Sin lecturas para este día</div>';return;}var recent=rows.slice(-25).reverse();list.innerHTML='';recent.forEach(function(r){var isHigh=(r.back||0)>=pressureThreshold||(r.back2||0)>=pressureThreshold||(r.bottomL||0)>=pressureThreshold||(r.bottomR||0)>=pressureThreshold;var div=document.createElement('div');div.className='history-item '+(isHigh?'hi':'ok');div.innerHTML='<div><div class="history-time">'+(r.time||'--:--')+'</div></div>'+'<div class="history-vals"><span style="color:#93C5FD">EI:'+fmtKg(r.back||0)+'</span> <span style="color:#F59E0B">ED:'+fmtKg(r.back2||0)+'</span> <span style="color:#06B6D4">AI:'+fmtKg(r.bottomL||0)+'</span> <span style="color:#818CF8">AD:'+fmtKg(r.bottomR||0)+'</span></div>'+'<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(r.postura||'')+' '+(r.angulo!=null?(r.angulo+'°'):'')+' '+(r.battery?('🔋 '+Math.round(r.battery)+'%'):'')+'</div>'+'<div style="font-size:10px">'+(isHigh?'🔴':'✅')+'</div>';list.appendChild(div);});}
-function renderStats(rows){if(!rows.length){document.getElementById('stat-posture').textContent='--%';document.getElementById('stat-back').textContent='---';document.getElementById('stat-bottom').textContent='---';var mb=document.getElementById('metric-back-diff'),ms=document.getElementById('metric-seat-diff');if(mb)mb.textContent='---';if(ms)ms.textContent='---';return;}var bA=avgBack(rows);var btA=roundKg(rows.reduce(function(s,r){return s+((r.bottomL||0)+(r.bottomR||0))/2},0)/rows.length);var b1A=avgRows(rows,'back'),b2A=avgRows(rows,'back2'),lA=avgRows(rows,'bottomL'),rA=avgRows(rows,'bottomR');var g=rows.filter(function(r){return (r.back||0)<pressureThreshold&&(r.back2||0)<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||0)<pressureThreshold;}).length;var gp=Math.round(g/rows.length*100);document.getElementById('stat-posture').textContent=gp+'%';document.getElementById('stat-posture').style.color=gp>=60?'#10B981':'#EF4444';document.getElementById('stat-back').textContent=fmtKg(bA);document.getElementById('stat-back').style.color=bA>=pressureThreshold?'#EF4444':'#93C5FD';document.getElementById('stat-bottom').textContent=fmtKg(btA);document.getElementById('stat-bottom').style.color=btA>=pressureThreshold?'#EF4444':'#06B6D4';var mb=document.getElementById('metric-back-diff'),ms=document.getElementById('metric-seat-diff');if(mb)mb.textContent=fmtKg(Math.abs(b1A-b2A));if(ms)ms.textContent=fmtKg(Math.abs(lA-rA));}
-function renderInsights(rows){var el=document.getElementById('insights');if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>';return;}var b1A=avgRows(rows,'back'),b2A=avgRows(rows,'back2'),lA=avgRows(rows,'bottomL'),rA=avgRows(rows,'bottomR');var g=rows.filter(function(r){return (r.back||0)<pressureThreshold&&(r.back2||0)<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||0)<pressureThreshold;}).length;var gp=Math.round(g/rows.length*100);var diffSeat=Math.abs(lA-rA),diffBack=Math.abs(b1A-b2A);function tip(i,t){return'<div class="tip-row"><span class="tip-icon">'+i+'</span><span class="tip-text">'+t+'</span></div>';}var html='';html+=tip(gp>=70?'✅':'⚠️',gp>=70?'Buena postura el '+gp+'% del tiempo.':'Postura correcta solo el '+gp+'%. Conviene revisar apoyo y descansos.');html+=tip(diffBack<0.120?'✅':'⚠️',diffBack<0.120?'Espalda equilibrada entre izquierda y derecha.':'Diferencia en espalda: izquierda '+fmtKg(b1A)+' vs derecha '+fmtKg(b2A)+'. Revisa alineación del tronco.');html+=tip(diffSeat<0.120?'✅':'⚠️',diffSeat<0.120?'Peso del asiento bastante simétrico.':'Diferencia en glúteos/isquiones: izq '+fmtKg(lA)+' vs der '+fmtKg(rA)+'. Intenta centrar el apoyo.');html+=tip((b1A<pressureThreshold&&b2A<pressureThreshold&&lA<pressureThreshold&&rA<pressureThreshold)?'✅':'🔴','Umbral actual: '+fmtKg(pressureThreshold)+'. Puedes cambiarlo en Settings según pruebas reales.');el.innerHTML=html;}
+function renderHistory(rows){var list=document.getElementById('historyList');if(!rows.length){list.innerHTML='<div class="empty-state">Sin lecturas para este día</div>';return;}var recent=rows.slice(-25).reverse();list.innerHTML='';recent.forEach(function(r){var isHigh=anyHighByLimits(r);var div=document.createElement('div');div.className='history-item '+(isHigh?'hi':'ok');div.innerHTML='<div><div class="history-time">'+(r.time||'--:--')+'</div></div>'+'<div class="history-vals"><span style="color:#93C5FD">EI:'+fmtKg(r.back||0)+'</span> <span style="color:#F59E0B">ED:'+fmtKg(r.back2||0)+'</span> <span style="color:#06B6D4">AI:'+fmtKg(r.bottomL||0)+'</span> <span style="color:#818CF8">AD:'+fmtKg(r.bottomR||0)+'</span></div>'+'<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(r.postura||'')+' '+(r.angulo!=null?(r.angulo+'°'):'')+' '+(r.battery?('🔋 '+Math.round(r.battery)+'%'):'')+'</div>'+'<div style="font-size:10px">'+(isHigh?'🔴':'✅')+'</div>';list.appendChild(div);});}
+function renderStats(rows){if(!rows.length){document.getElementById('stat-posture').textContent='--%';document.getElementById('stat-back').textContent='---';document.getElementById('stat-bottom').textContent='---';var mb=document.getElementById('metric-back-diff'),ms=document.getElementById('metric-seat-diff');if(mb)mb.textContent='---';if(ms)ms.textContent='---';return;}var bA=avgBack(rows);var btA=roundKg(rows.reduce(function(s,r){return s+((r.bottomL||0)+(r.bottomR||0))/2},0)/rows.length);var b1A=avgRows(rows,'back'),b2A=avgRows(rows,'back2'),lA=avgRows(rows,'bottomL'),rA=avgRows(rows,'bottomR');var g=rows.filter(function(r){return !anyHighByLimits(r);}).length;var gp=Math.round(g/rows.length*100);document.getElementById('stat-posture').textContent=gp+'%';document.getElementById('stat-posture').style.color=gp>=60?'#10B981':'#EF4444';document.getElementById('stat-back').textContent=fmtKg(bA);var lim=getPressureLimits();document.getElementById('stat-back').style.color=bA>=lim.backWarn?'#EF4444':'#93C5FD';document.getElementById('stat-bottom').textContent=fmtKg(btA);document.getElementById('stat-bottom').style.color=btA>=lim.seatWarn?'#EF4444':'#06B6D4';var mb=document.getElementById('metric-back-diff'),ms=document.getElementById('metric-seat-diff');if(mb)mb.textContent=fmtKg(Math.abs(b1A-b2A));if(ms)ms.textContent=fmtKg(Math.abs(lA-rA));}
+function renderInsights(rows){var el=document.getElementById('insights');if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>';return;}var b1A=avgRows(rows,'back'),b2A=avgRows(rows,'back2'),lA=avgRows(rows,'bottomL'),rA=avgRows(rows,'bottomR');var g=rows.filter(function(r){return !anyHighByLimits(r);}).length;var gp=Math.round(g/rows.length*100);var diffSeat=Math.abs(lA-rA),diffBack=Math.abs(b1A-b2A);function tip(i,t){return'<div class="tip-row"><span class="tip-icon">'+i+'</span><span class="tip-text">'+t+'</span></div>';}var html='';html+=tip(gp>=70?'✅':'⚠️',gp>=70?'Buena postura el '+gp+'% del tiempo.':'Postura correcta solo el '+gp+'%. Conviene revisar apoyo y descansos.');html+=tip(diffBack<0.120?'✅':'⚠️',diffBack<0.120?'Espalda equilibrada entre izquierda y derecha.':'Diferencia en espalda: izquierda '+fmtKg(b1A)+' vs derecha '+fmtKg(b2A)+'. Revisa alineación del tronco.');html+=tip(diffSeat<0.120?'✅':'⚠️',diffSeat<0.120?'Peso del asiento bastante simétrico.':'Diferencia en glúteos/isquiones: izq '+fmtKg(lA)+' vs der '+fmtKg(rA)+'. Intenta centrar el apoyo.');var lim=getPressureLimits();html+=tip((b1A<lim.backWarn&&b2A<lim.backWarn&&lA<lim.seatWarn&&rA<lim.seatWarn)?'✅':'🔴','Umbral dinámico: espalda '+fmtKg(lim.backWarn)+' / asiento '+fmtKg(lim.seatWarn)+' según peso del paciente.');el.innerHTML=html;}
 function attachChartTooltip(){var canvas=document.getElementById('mainChart');if(!canvas||canvas._tooltipReady)return;canvas._tooltipReady=true;function handle(e){if(!canvas._chartData||!canvas._chartData.length)return;var rect=canvas.getBoundingClientRect();var x=((e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX)-rect.left;var p=canvas._chartPad;if(!p)return;var idx=Math.round((x-p.L)/p.step);idx=Math.max(0,Math.min(idx,canvas._chartData.length-1));var d=canvas._chartData[idx];var tip=document.getElementById('chartTooltip');tip.innerHTML='<b>'+d.label+'</b><br><span style="color:#10B981">■</span> EI:'+fmtKg(d.back||0)+' &nbsp;<span style="color:#F59E0B">■</span> ED:'+fmtKg(d.back2||0)+'<br><span style="color:#06B6D4">■</span> AI:'+fmtKg(d.bottomL||0)+' &nbsp;<span style="color:#818CF8">■</span> AD:'+fmtKg(d.bottomR||0);tip.style.left=Math.min(x,rect.width-170)+'px';tip.style.top='6px';tip.style.display='block';setTimeout(function(){tip.style.display='none';},2600);}canvas.addEventListener('click',handle);canvas.addEventListener('touchstart',function(e){e.preventDefault();handle(e);},{passive:false});}
 
 // ══════════════════════════════════════════════════════
@@ -1079,5 +1213,4 @@ window.addEventListener('resize',function(){drawChart();});
 </script>
 </body>
 </html>
-
 
