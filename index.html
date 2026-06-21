@@ -219,7 +219,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <button onclick="doDisconnect()" style="background:none;border:1px solid #334155;color:#94A3B8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer">Disconnect</button>
     </div>
 
-    <div id="sheetsBadge" class="sheets-badge off">💾 Historial local activo</div>
+    <div id="sheetsBadge" class="sheets-badge off">⚠️ Configura URL de Google Sheets para guardar en Datos</div>
 
     <!-- Peso card -->
     <div class="peso-card" id="pesoCard" style="display:none">
@@ -473,7 +473,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         <tr><td style="color:#94A3B8;padding:5px 0">Seat L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (ángulo)</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Battery</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ADC ESP32 / %</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Local + Google Sheets ☁️</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Google Sheets: Datos ☁️</td></tr>
       </table>
     </div>
 
@@ -562,7 +562,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 // ══════════════════════════════════════════════════════
 var connected=false, pressureThreshold=0.700;
 var sensorInterval=null, gyroInterval=null, saveInterval=null;
-var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0, deviceMessage="";
+var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0, deviceMessage="", postureTimeMin=0, deviceAlert=0, deviceMotor="";
 var scriptURL='', selectedDay='', sheetsOk=false;
 var connMode='demo', bleDevice=null, bleChar=null, bleRxChar=null, bleService=null;
 var BLE_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
@@ -900,9 +900,12 @@ function onBleData(e){
     backP2     = filterSensorKg('backP2', p[3]);
 
     gyroAngle  = parseFloat(p[4])||0;
+    postureTimeMin = parseFloat(p[5])||0;
     batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
+    deviceAlert = parseInt(p[7])||0;
     var msg=(p[8]||'');
     deviceMessage=msg;
+    deviceMotor=(p[9]||'');
     posturaSentado = Math.abs(gyroAngle)<=12 && msg.toUpperCase().indexOf('SIN USUARIO')<0;
   }
   // Old format compatible: B1,B2,L,R,angle,posture,battery
@@ -913,6 +916,9 @@ function onBleData(e){
     bottomPR   = filterSensorKg('bottomPR', p[3]);
 
     gyroAngle  = parseFloat(p[4])||0;
+    postureTimeMin = 0;
+    deviceAlert = 0;
+    deviceMotor = "";
     deviceMessage="";
     posturaSentado = Math.abs(gyroAngle)<=12;
     batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
@@ -923,6 +929,9 @@ function onBleData(e){
     bottomPL   = filterSensorKg('bottomPL', p[1]);
     bottomPR   = p.length>2 ? filterSensorKg('bottomPR', p[2]) : 0;
     gyroAngle  = p.length>3?(parseFloat(p[3])||0):0;
+    postureTimeMin = 0;
+    deviceAlert = 0;
+    deviceMotor = "";
     deviceMessage="";
     posturaSentado = p.length>4?(parseInt(p[4])===1):true;
     batteryPct = 0;
@@ -1138,14 +1147,152 @@ function pad(n){return n<10?'0'+n:''+n;}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function nowTime(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
 function getActivePatientName(){if(!activePatientId) return '';var p=getPatients().find(function(x){return x.id===activePatientId;});return p?p.name:'';}
+function getActivePatientWeight(){if(!activePatientId) return 0;var p=getPatients().find(function(x){return x.id===activePatientId;});return p?parseFloat(p.peso||0)||0:0;}
 function getHistoryKey(){return 'pg_hist_'+(activePatientId||'global')+'_';}
 function getLocalDays(){var prefix=getHistoryKey(),days=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix)) days.push(k.replace(prefix,''));}return days.sort().reverse();}
 function getLocalDay(day){try{return JSON.parse(localStorage.getItem(getHistoryKey()+day)||'[]');}catch(e){return[];}}
 function clearLocalHistory(){var prefix=getHistoryKey(),toDelete=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix))toDelete.push(k);}toDelete.forEach(function(k){localStorage.removeItem(k);});selectedDay='';allDaysData={};allDaysList=[];loadAnalytics();}
-function recordReading(){if(!connected) return;var day=todayStr();var key=getHistoryKey()+day;var arr;try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}arr.push({time:nowTime(),back:backP,back2:backP2,bottomL:bottomPL,bottomR:bottomPR,bottom:(bottomPL+bottomPR)/2,angulo:gyroAngle,postura:postureFromAngleAndMsg(deviceMessage),battery:batteryPct,patientId:activePatientId||'',patientName:getActivePatientName()});if(arr.length>2000) arr=arr.slice(-2000);localStorage.setItem(key,JSON.stringify(arr));allDaysData[day]=arr;if(allDaysList.indexOf(day)<0){allDaysList.unshift(day);allDaysList.sort().reverse();}if(scriptURL) saveToSheets();}
-function saveToSheets(){if(!scriptURL||!connected) return;var patient=encodeURIComponent(getActivePatientName());var url=scriptURL+'?action=write'+'&paciente='+patient+'&patient='+patient+'&espalda='+encodeURIComponent(backP)+'&espalda2='+encodeURIComponent(backP2)+'&back='+encodeURIComponent(backP)+'&back2='+encodeURIComponent(backP2)+'&izquierda='+encodeURIComponent(bottomPL)+'&derecha='+encodeURIComponent(bottomPR)+'&bottomL='+encodeURIComponent(bottomPL)+'&bottomR='+encodeURIComponent(bottomPR)+'&angulo='+encodeURIComponent(gyroAngle)+'&angle='+encodeURIComponent(gyroAngle)+'&postura='+encodeURIComponent(postureFromAngleAndMsg(deviceMessage))+'&battery='+encodeURIComponent(batteryPct);fetch(url).then(function(r){return r.json();}).then(function(d){if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}else updateSheetsBadge('err','respuesta no OK');}).catch(function(){updateSheetsBadge('err','sin conexión');});}
-function updateSheetsBadge(state,msg){var b=document.getElementById('sheetsBadge');if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Google Sheets: conectado ✓';}else if(state==='err'){b.className='sheets-badge err';b.textContent='🗂 Sheets: error — '+(msg||'');}else if(state==='checking'){b.className='sheets-badge off';b.textContent='🗂 Verificando Sheets...';}else{b.className='sheets-badge off';b.textContent='💾 Historial local activo';}}
-function testSheetsConnection(){var url=document.getElementById('scriptURL').value.trim();if(!url){showSheetsTestResult('Pega la URL primero',false);return;}showSheetsTestResult('<span class="spinner"></span>Probando...',null);var patient=encodeURIComponent(getActivePatientName()||'');fetch(url+'?action=days').then(function(r){return r.json();}).then(function(d){if(d.status==='ok'){scriptURL=url;showSheetsTestResult('✅ Conexión exitosa',true);updateSheetsBadge('ok');return;}return fetch(url+'?action=read&paciente='+patient).then(function(r){return r.json();}).then(function(d2){if(d2.status==='ok'){scriptURL=url;showSheetsTestResult('✅ Conexión exitosa',true);updateSheetsBadge('ok');}else showSheetsTestResult('❌ Respuesta inesperada del Apps Script',false);});}).catch(function(){fetch(url+'?action=read&paciente='+patient).then(function(r){return r.json();}).then(function(d){if(d.status==='ok'){scriptURL=url;showSheetsTestResult('✅ Conexión exitosa',true);updateSheetsBadge('ok');}else showSheetsTestResult('❌ No se pudo conectar',false);}).catch(function(){showSheetsTestResult('❌ No se pudo conectar',false);});});}
+
+function buildReadingRow(){
+  return {
+    time: nowTime(),
+    back: backP,
+    back2: backP2,
+    bottomL: bottomPL,
+    bottomR: bottomPR,
+    bottom: (bottomPL+bottomPR)/2,
+    angulo: gyroAngle,
+    tiempoMin: postureTimeMin,
+    postura: postureFromAngleAndMsg(deviceMessage),
+    battery: batteryPct,
+    alerta: deviceAlert,
+    mensaje: deviceMessage,
+    motor: deviceMotor,
+    patientId: activePatientId||'',
+    patientName: getActivePatientName(),
+    pesoPaciente: getActivePatientWeight()
+  };
+}
+
+function saveLocalReading(row){
+  var day=todayStr();
+  var key=getHistoryKey()+day;
+  var arr;
+  try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}
+  arr.push(row);
+  if(arr.length>2000) arr=arr.slice(-2000);
+  localStorage.setItem(key,JSON.stringify(arr));
+  allDaysData[day]=arr;
+  if(allDaysList.indexOf(day)<0){allDaysList.unshift(day);allDaysList.sort().reverse();}
+}
+
+function cacheReadingForUI(row){
+  var day=todayStr();
+  if(!allDaysData[day]) allDaysData[day]=[];
+  allDaysData[day].push(row);
+  if(allDaysData[day].length>2000) allDaysData[day]=allDaysData[day].slice(-2000);
+  if(allDaysList.indexOf(day)<0){allDaysList.unshift(day);allDaysList.sort().reverse();}
+}
+
+function recordReading(){
+  if(!connected) return;
+  var row=buildReadingRow();
+
+  // Primary mode: save in Google Sheets / Excel file "Datos".
+  // LocalStorage is used only if no Apps Script URL is configured.
+  if(scriptURL){
+    cacheReadingForUI(row);
+    saveToSheets(row);
+    return;
+  }
+
+  saveLocalReading(row);
+  updateSheetsBadge('off','configura URL');
+}
+
+function saveToSheets(row){
+  if(!scriptURL||!connected) return;
+  row=row||buildReadingRow();
+
+  var q=new URLSearchParams({
+    action:'write',
+    paciente:row.patientName||'Paciente',
+    patient:row.patientName||'Paciente',
+    pesoPaciente:String(row.pesoPaciente||0),
+    peso:String(row.pesoPaciente||0),
+
+    // App/AppsScript names
+    seatL:String(row.bottomL||0),
+    seatR:String(row.bottomR||0),
+    backL:String(row.back||0),
+    backR:String(row.back2||0),
+
+    // Spanish aliases
+    izquierda:String(row.bottomL||0),
+    derecha:String(row.bottomR||0),
+    bottomL:String(row.bottomL||0),
+    bottomR:String(row.bottomR||0),
+    espalda:String(row.back||0),
+    espalda2:String(row.back2||0),
+    back:String(row.back||0),
+    back2:String(row.back2||0),
+
+    angulo:String(row.angulo||0),
+    angle:String(row.angulo||0),
+    tiempoMin:String(row.tiempoMin||0),
+    timeMin:String(row.tiempoMin||0),
+    postura:row.postura||'',
+    battery:String(row.battery||0),
+    bateria:String(row.battery||0),
+    alerta:String(row.alerta||0),
+    mensaje:row.mensaje||'',
+    motor:row.motor||''
+  });
+
+  fetch(scriptURL+'?'+q.toString())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}
+      else updateSheetsBadge('err',d.message||'respuesta no OK');
+    })
+    .catch(function(){updateSheetsBadge('err','sin conexión');});
+}
+
+function updateSheetsBadge(state,msg){
+  var b=document.getElementById('sheetsBadge');
+  if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Guardando en Google Sheets: Datos ✓';}
+  else if(state==='err'){b.className='sheets-badge err';b.textContent='🗂 Sheets: error — '+(msg||'');}
+  else if(state==='checking'){b.className='sheets-badge off';b.textContent='🗂 Verificando Sheets...';}
+  else{b.className='sheets-badge off';b.textContent='⚠️ Configura URL de Google Sheets para guardar en Datos';}
+}
+
+function testSheetsConnection(){
+  var url=document.getElementById('scriptURL').value.trim();
+  if(!url){showSheetsTestResult('Pega la URL primero',false);return;}
+  showSheetsTestResult('<span class="spinner"></span>Probando...',null);
+  var patient=encodeURIComponent(getActivePatientName()||'Paciente');
+
+  fetch(url+'?action=setup')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status==='ok'){
+        scriptURL=url;
+        showSheetsTestResult('✅ Conexión exitosa. Guardará en hoja Datos y en hoja del paciente.',true);
+        updateSheetsBadge('ok');
+      }else{
+        showSheetsTestResult('❌ Respuesta inesperada: '+(d.message||''),false);
+      }
+    })
+    .catch(function(){
+      fetch(url+'?action=test')
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.status==='ok'){scriptURL=url;showSheetsTestResult('✅ Conexión exitosa',true);updateSheetsBadge('ok');}
+          else showSheetsTestResult('❌ No se pudo conectar',false);
+        })
+        .catch(function(){showSheetsTestResult('❌ No se pudo conectar',false);});
+    });
+}
 function showSheetsTestResult(msg,ok){var el=document.getElementById('sheetsTestResult');el.style.display='block';el.style.color=ok===true?'#10B981':ok===false?'#EF4444':'#94A3B8';el.innerHTML=msg;}
 // ══════════════════════════════════════════════════════
 // ANALYTICS — LOCAL + SHEETS + PERIOD CHART
@@ -1213,4 +1360,5 @@ window.addEventListener('resize',function(){drawChart();});
 </script>
 </body>
 </html>
+
 
