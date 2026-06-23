@@ -347,7 +347,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="screen-title">Pacientes</div>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()" style="color:#EF4444;border-color:#EF4444">Cerrar sesión</button>
     </div>
-    <div class="screen-sub">Sesión activa del paciente registrado</div>
+    <div class="screen-sub">Sesión activa del paciente registrado en Google Sheets</div>
 
     <div id="activePatientCard" style="display:none;background:#0A1F18;border:1px solid #10B981;border-radius:12px;padding:16px;margin-bottom:12px">
       <div style="font-size:11px;color:#10B981;font-weight:600;margin-bottom:10px">● PACIENTE ACTIVO</div>
@@ -443,7 +443,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 
     <div class="card">
       <div class="card-title">🗂 Google Sheets</div>
-      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">URL del Apps Script del paciente activo. Se guarda por paciente.</div>
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">URL del Apps Script. Se usa para login, registro y guardar datos en Sheets.</div>
       <div class="field-label">URL del Apps Script</div>
       <input class="input-field" id="scriptURL" placeholder="https://script.google.com/macros/s/..." style="font-size:12px">
       <div id="sheetsTestResult" style="font-size:11px;margin-bottom:6px;display:none"></div>
@@ -513,6 +513,8 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <input class="input-field" id="loginName" placeholder="Tu nombre completo">
       <div class="field-label">Contraseña</div>
       <input class="input-field" type="password" id="loginPass" placeholder="Tu contraseña">
+      <div class="field-label">URL Google Sheets / Apps Script *</div>
+      <input class="input-field" id="loginSheets" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px">
       <button class="btn btn-primary" onclick="doLogin()" style="margin-top:4px">Entrar</button>
     </div>
 
@@ -715,6 +717,122 @@ function savePatients(arr){localStorage.setItem('tb_patients',JSON.stringify(arr
 function genId(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);}
 function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+
+// ══════════════════════════════════════════════════════
+// REAL BACKEND HELPERS: Google Sheets login + JSONP no-CORS
+// ══════════════════════════════════════════════════════
+function getSavedBackendURL(){
+  return localStorage.getItem('tb_backend_url') || localStorage.getItem('lastScriptURL') || '';
+}
+
+function setBackendURL(url){
+  url=(url||'').trim();
+  if(!url) return;
+  scriptURL=url;
+  localStorage.setItem('tb_backend_url',url);
+  localStorage.setItem('lastScriptURL',url);
+
+  ['loginSheets','regSheets','scriptURL','editSheets'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && !el.value) el.value=url;
+  });
+}
+
+function getAuthBackendURL(){
+  var ids=['loginSheets','regSheets','scriptURL','editSheets'];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(el && el.value && el.value.trim()) return el.value.trim();
+  }
+  return getSavedBackendURL();
+}
+
+function initBackendFields(){
+  var url=getSavedBackendURL();
+  if(!url) return;
+  ['loginSheets','regSheets','scriptURL','editSheets'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && !el.value) el.value=url;
+  });
+  scriptURL=url;
+}
+
+function sheetsJSONP(params, customUrl){
+  return new Promise(function(resolve,reject){
+    var url=(customUrl||scriptURL||getAuthBackendURL()||'').trim();
+    if(!url){reject(new Error('No Apps Script URL'));return;}
+
+    var cb='tb_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    params=params||{};
+    params.callback=cb;
+
+    var qs=new URLSearchParams(params).toString();
+    var s=document.createElement('script');
+    var done=false;
+
+    window[cb]=function(data){
+      done=true;
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      if(s.parentNode) s.parentNode.removeChild(s);
+      resolve(data);
+    };
+
+    s.onerror=function(){
+      if(done) return;
+      done=true;
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      if(s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('JSONP load error'));
+    };
+
+    s.src=url+(url.indexOf('?')>=0?'&':'?')+qs;
+    document.body.appendChild(s);
+
+    setTimeout(function(){
+      if(done) return;
+      done=true;
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      if(s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('JSONP timeout'));
+    },12000);
+  });
+}
+
+function upsertBackendPatient(patient, url){
+  var pts=getPatients();
+  var name=(patient.name||patient.nombre||patient.paciente||'Paciente').trim();
+  var found=pts.find(function(x){
+    return String(x.name||'').toLowerCase()===name.toLowerCase();
+  });
+
+  var id=found ? found.id : ('remote_'+(patient.id||genId()));
+  var obj={
+    id:id,
+    name:name,
+    peso:String(patient.peso||patient.weight||''),
+    password:found ? (found.password||'') : '',
+    sheetsURL:url,
+    therapist:patient.therapist||patient.terapeuta||'',
+    createdAt: found ? (found.createdAt||new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+    remoteId:patient.id||''
+  };
+
+  if(found){
+    pts=pts.map(function(x){return x.id===found.id?Object.assign({},x,obj):x;});
+  }else{
+    pts.unshift(obj);
+  }
+
+  savePatients(pts);
+  return id;
+}
+
+function loginFromBackendPatient(patient, url){
+  setBackendURL(url);
+  var id=upsertBackendPatient(patient, url);
+  loginAs(id);
+}
+
 function switchAuthTab(tab){
   document.getElementById('loginTabBtn').classList.toggle('active',tab==='login');
   document.getElementById('registerTabBtn').classList.toggle('active',tab==='register');
@@ -725,9 +843,43 @@ function switchAuthTab(tab){
 function doLogin(){
   var name=document.getElementById('loginName').value.trim();
   var pass=document.getElementById('loginPass').value;
+  var url=getAuthBackendURL();
   var err=document.getElementById('loginError');
+
   err.style.display='none';
-  if(!name||!pass){err.textContent='Completa todos los campos.';err.style.display='block';return;}
+
+  if(!name||!pass){
+    err.textContent='Completa nombre y contraseña.';
+    err.style.display='block';
+    return;
+  }
+
+  // Real mode: login against Google Sheets backend.
+  if(url){
+    setBackendURL(url);
+    err.textContent='Conectando con Google Sheets...';
+    err.style.display='block';
+    err.style.color='#94A3B8';
+
+    sheetsJSONP({action:'login',name:name,password:pass},url)
+      .then(function(d){
+        err.style.color='';
+        if(d.status==='ok'&&d.patient){
+          loginFromBackendPatient(d.patient,url);
+        }else{
+          err.textContent=d.message||'Login no válido.';
+          err.style.display='block';
+        }
+      })
+      .catch(function(){
+        err.style.color='';
+        err.textContent='No se pudo conectar con el backend. Revisa URL / deployment.';
+        err.style.display='block';
+      });
+    return;
+  }
+
+  // Local fallback only for offline testing.
   var pts=getPatients();
   var p=pts.find(function(x){return x.name.toLowerCase()===name.toLowerCase()&&x.password===pass;});
   if(!p){err.textContent='Nombre o contraseña incorrectos.';err.style.display='block';return;}
@@ -738,16 +890,47 @@ function doRegister(){
   var name=document.getElementById('regName').value.trim();
   var peso=document.getElementById('regPeso').value.trim();
   var pass=document.getElementById('regPass').value;
-  var sheets=document.getElementById('regSheets').value.trim();
+  var sheets=document.getElementById('regSheets').value.trim() || getAuthBackendURL();
   var therapist=document.getElementById('regTherapist').value.trim();
   var err=document.getElementById('registerError');
+
   err.style.display='none';
+
   if(!name){err.textContent='El nombre es obligatorio.';err.style.display='block';return;}
+  if(!peso||parseFloat(peso)<=0){err.textContent='El peso es obligatorio.';err.style.display='block';return;}
   if(!pass||pass.length<4){err.textContent='La contraseña debe tener mín. 4 caracteres.';err.style.display='block';return;}
+
+  // Real mode: register account in Google Sheets backend.
+  if(sheets){
+    setBackendURL(sheets);
+    err.textContent='Creando cuenta en Google Sheets...';
+    err.style.display='block';
+    err.style.color='#94A3B8';
+
+    sheetsJSONP({action:'register',name:name,peso:peso,password:pass,therapist:therapist},sheets)
+      .then(function(d){
+        err.style.color='';
+        if(d.status==='ok'&&d.patient){
+          loginFromBackendPatient(d.patient,sheets);
+        }else{
+          err.textContent=d.message||'No se pudo registrar.';
+          err.style.display='block';
+        }
+      })
+      .catch(function(){
+        err.style.color='';
+        err.textContent='No se pudo conectar con Google Sheets. Revisa URL / deployment.';
+        err.style.display='block';
+      });
+    return;
+  }
+
+  // Local fallback only for offline testing.
   var pts=getPatients();
   if(pts.find(function(x){return x.name.toLowerCase()===name.toLowerCase();})){
     err.textContent='Ya existe un paciente con ese nombre.';err.style.display='block';return;
   }
+
   var newP={id:genId(),name:name,peso:peso||'',password:pass,sheetsURL:sheets,therapist:therapist,createdAt:new Date().toISOString().split('T')[0]};
   pts.unshift(newP);
   savePatients(pts);
@@ -759,7 +942,7 @@ function loginAs(id){
   localStorage.setItem('activePatientId',id);
   var pts=getPatients();
   var p=pts.find(function(x){return x.id===id;});
-  if(p&&p.sheetsURL) scriptURL=p.sheetsURL;
+  if(p&&p.sheetsURL) setBackendURL(p.sheetsURL);
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('scriptURL').value=scriptURL;
@@ -1214,7 +1397,7 @@ function saveToSheets(row){
   if(!scriptURL||!connected) return;
   row=row||buildReadingRow();
 
-  var q=new URLSearchParams({
+  sheetsJSONP({
     action:'write',
     paciente:row.patientName||'Paciente',
     patient:row.patientName||'Paciente',
@@ -1247,15 +1430,12 @@ function saveToSheets(row){
     alerta:String(row.alerta||0),
     mensaje:row.mensaje||'',
     motor:row.motor||''
+  }).then(function(d){
+    if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}
+    else updateSheetsBadge('err',d.message||d.mensaje||'respuesta no OK');
+  }).catch(function(){
+    updateSheetsBadge('err','sin conexión');
   });
-
-  fetch(scriptURL+'?'+q.toString())
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}
-      else updateSheetsBadge('err',d.message||'respuesta no OK');
-    })
-    .catch(function(){updateSheetsBadge('err','sin conexión');});
 }
 
 function updateSheetsBadge(state,msg){
@@ -1267,30 +1447,31 @@ function updateSheetsBadge(state,msg){
 }
 
 function testSheetsConnection(){
-  var url=document.getElementById('scriptURL').value.trim();
+  var url=document.getElementById('scriptURL').value.trim() || getAuthBackendURL();
   if(!url){showSheetsTestResult('Pega la URL primero',false);return;}
-  showSheetsTestResult('<span class="spinner"></span>Probando...',null);
-  var patient=encodeURIComponent(getActivePatientName()||'Paciente');
 
-  fetch(url+'?action=setup')
-    .then(function(r){return r.json();})
+  setBackendURL(url);
+  showSheetsTestResult('<span class="spinner"></span>Probando...',null);
+
+  sheetsJSONP({action:'setup'},url)
     .then(function(d){
       if(d.status==='ok'){
         scriptURL=url;
-        showSheetsTestResult('✅ Conexión exitosa. Guardará en hoja Datos y en hoja del paciente.',true);
+        showSheetsTestResult('✅ Conexión exitosa. Guardará en Datos, Pacientes y la hoja del paciente.',true);
         updateSheetsBadge('ok');
+
+        if(activePatientId){
+          var pts=getPatients();
+          pts=pts.map(function(p){return p.id===activePatientId?Object.assign({},p,{sheetsURL:url}):p;});
+          savePatients(pts);
+          refreshPatientBanner();
+        }
       }else{
-        showSheetsTestResult('❌ Respuesta inesperada: '+(d.message||''),false);
+        showSheetsTestResult('❌ Respuesta inesperada: '+(d.message||d.mensaje||''),false);
       }
     })
     .catch(function(){
-      fetch(url+'?action=test')
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(d.status==='ok'){scriptURL=url;showSheetsTestResult('✅ Conexión exitosa',true);updateSheetsBadge('ok');}
-          else showSheetsTestResult('❌ No se pudo conectar',false);
-        })
-        .catch(function(){showSheetsTestResult('❌ No se pudo conectar',false);});
+      showSheetsTestResult('❌ No se pudo conectar. Revisa Deploy como Web App: Anyone.',false);
     });
 }
 function showSheetsTestResult(msg,ok){var el=document.getElementById('sheetsTestResult');el.style.display='block';el.style.color=ok===true?'#10B981':ok===false?'#EF4444':'#94A3B8';el.innerHTML=msg;}
@@ -1301,7 +1482,33 @@ function normalizeDateValue(v){if(!v) return todayStr();var s=String(v).trim();i
 function normalizeTimeValue(v){if(!v) return '00:00:00';var s=String(v).trim();var m=s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(m) return pad(parseInt(m[1]))+':'+m[2]+':'+(m[3]||'00');var d=new Date(s);if(!isNaN(d.getTime())) return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());return s;}
 function numField(row,names){for(var i=0;i<names.length;i++){if(row[names[i]]!=null && row[names[i]]!=='') return parseFloat(row[names[i]])||0;}return 0;}
 function normalizeSheetRow(row,patientName){var time=normalizeTimeValue(row.time||row.hora||row.Hora||row.hour||row.Timestamp||row.timestamp);var b1=numField(row,['back','espalda','Espalda','B1','b1','espalda1','Espalda1']);var b2=numField(row,['back2','espalda2','Espalda2','B2','b2']);var l=numField(row,['bottomL','left','izquierda','Izquierda','L','asientoIzq','asiento_izq']);var r=numField(row,['bottomR','right','derecha','Derecha','R','asientoDer','asiento_der']);return {time:time,back:b1,back2:b2,bottomL:l,bottomR:r,bottom:(l+r)/2,angulo:numField(row,['angulo','angle','Angulo','Ángulo']),postura:row.postura||'',battery:numField(row,['battery','bateria','Bateria','BAT']),patientName:patientName};}
-function fetchAllDays(){var localDays=getLocalDays();localDays.forEach(function(d){allDaysData[d]=getLocalDay(d);});allDaysList=localDays.slice();if(!scriptURL) return Promise.resolve();var patientName=getActivePatientName();var patient=encodeURIComponent(patientName||'');return fetch(scriptURL+'?action=read&paciente='+patient).then(function(r){return r.json();}).then(function(d){if(d.status==='ok'&&d.rows&&d.rows.length){d.rows.forEach(function(row){var nr=normalizeSheetRow(row,patientName);var fecha=normalizeDateValue(row.fecha||row.Fecha||row.date||row.Date||row.timestamp||row.Timestamp);if(!allDaysData[fecha]) allDaysData[fecha]=[];allDaysData[fecha].push(nr);if(allDaysList.indexOf(fecha)<0) allDaysList.push(fecha);});allDaysList.sort().reverse();return;}return fetch(scriptURL+'?action=days').then(function(r){return r.json();}).then(function(daysData){var days=daysData.days||[];var jobs=days.map(function(day){return fetch(scriptURL+'?action=read&day='+encodeURIComponent(day)).then(function(r){return r.json();}).then(function(dayData){var rows=dayData.rows||[];allDaysData[day]=rows.map(function(row){var nr=normalizeSheetRow(row,patientName);return Object.assign({},row,nr);});if(allDaysList.indexOf(day)<0) allDaysList.push(day);}).catch(function(){});});return Promise.all(jobs).then(function(){allDaysList.sort().reverse();});});}).catch(function(){return Promise.resolve();});}
+function fetchAllDays(){
+  var localDays=getLocalDays();
+  localDays.forEach(function(d){allDaysData[d]=getLocalDay(d);});
+  allDaysList=localDays.slice();
+
+  if(!scriptURL) return Promise.resolve();
+
+  var patientName=getActivePatientName();
+
+  return sheetsJSONP({action:'read',paciente:patientName||''})
+    .then(function(d){
+      if(d.status==='ok'&&d.rows&&d.rows.length){
+        d.rows.forEach(function(row){
+          var nr=normalizeSheetRow(row,patientName);
+          var fecha=normalizeDateValue(row.fecha||row.Fecha||row.date||row.Date||row.timestamp||row.Timestamp);
+          if(!allDaysData[fecha]) allDaysData[fecha]=[];
+          allDaysData[fecha].push(nr);
+          if(allDaysList.indexOf(fecha)<0) allDaysList.push(fecha);
+        });
+        allDaysList.sort().reverse();
+      }
+      return Promise.resolve();
+    })
+    .catch(function(){
+      return Promise.resolve();
+    });
+}
 function loadAnalytics(){document.getElementById('refreshBtn').innerHTML='<span class="spinner"></span>Cargando...';allDaysData={};allDaysList=[];fetchAllDays().then(function(){document.getElementById('refreshBtn').textContent='🔄 Actualizar';renderDaySelector(allDaysList);if((!selectedDay||allDaysList.indexOf(selectedDay)<0)&&allDaysList.length>0) selectedDay=allDaysList[0];drawChart();if(selectedDay){var rows=allDaysData[selectedDay]||[];document.getElementById('historyTitle').textContent='Lecturas — '+selectedDay;renderHistory(rows);renderStats(rows);renderInsights(rows);}else{document.getElementById('historyList').innerHTML='<div class="empty-state">No hay datos. Conecta el ESP32 o usa modo demo.</div>';renderStats([]);renderInsights([]);}}).catch(function(){document.getElementById('refreshBtn').textContent='🔄 Actualizar';document.getElementById('historyList').innerHTML='<div class="empty-state" style="color:#EF4444">❌ Error cargando analytics</div>';});}
 function setPeriod(p,el){currentPeriod=p;document.querySelectorAll('.period-tab').forEach(function(t){t.classList.remove('active')});if(el) el.classList.add('active');var picker=document.getElementById('dayPickerWrap');if(picker) picker.style.display=p==='day'?'block':'none';drawChart();}
 function getLast7Days(){var arr=[];var now=new Date();for(var i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);arr.push(d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()));}return arr;}
@@ -1357,6 +1564,8 @@ window.onload=function(){
 };
 document.addEventListener('DOMContentLoaded',function(){attachChartTooltip();});
 window.addEventListener('resize',function(){drawChart();});
+
+initBackendFields();
 </script>
 </body>
 </html>
