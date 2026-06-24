@@ -1459,27 +1459,47 @@ function testSheetsConnection(){
   if(!url){showSheetsTestResult('Pega la URL primero',false);return;}
 
   setBackendURL(url);
-  showSheetsTestResult('<span class="spinner"></span>Probando...',null);
+  showSheetsTestResult('<span class="spinner"></span>Probando conexión...',null);
 
-  sheetsJSONP({action:'setup'},url)
+  // First use ping/test. Do not use setup first, because setup writes headers and can fail
+  // if Apps Script was not authorized yet.
+  sheetsJSONP({action:'ping'},url)
     .then(function(d){
       if(d.status==='ok'){
         scriptURL=url;
-        showSheetsTestResult('✅ Conexión exitosa. Guardará en Datos, Pacientes y la hoja del paciente.',true);
+        showSheetsTestResult('✅ Conexión exitosa. Backend responde.',true);
         updateSheetsBadge('ok');
 
-        if(activePatientId){
-          var pts=getPatients();
-          pts=pts.map(function(p){return p.id===activePatientId?Object.assign({},p,{sheetsURL:url}):p;});
-          savePatients(pts);
-          refreshPatientBanner();
-        }
-      }else{
-        showSheetsTestResult('❌ Respuesta inesperada: '+(d.message||d.mensaje||''),false);
+        // Run setup after ping, but do not break the app if setup fails.
+        sheetsJSONP({action:'setup'},url).catch(function(){});
+        return;
       }
+
+      return sheetsJSONP({action:'test'},url).then(function(t){
+        if(t.status==='ok'){
+          scriptURL=url;
+          showSheetsTestResult('✅ Conexión exitosa. Backend responde.',true);
+          updateSheetsBadge('ok');
+        }else{
+          showSheetsTestResult('❌ Backend respondió, pero no OK: '+(t.message||''),false);
+        }
+      });
     })
     .catch(function(){
-      showSheetsTestResult('❌ No se pudo conectar. Revisa Deploy como Web App: Anyone.',false);
+      // fallback for backend without ping
+      sheetsJSONP({action:'test'},url)
+        .then(function(d){
+          if(d.status==='ok'){
+            scriptURL=url;
+            showSheetsTestResult('✅ Conexión exitosa. Backend responde.',true);
+            updateSheetsBadge('ok');
+          }else{
+            showSheetsTestResult('❌ Respuesta del backend: '+(d.message||'no OK'),false);
+          }
+        })
+        .catch(function(){
+          showSheetsTestResult('❌ No se pudo conectar. Abre la URL en browser con ?action=ping y revisa deployment: Web app / Anyone / Execute as Me / New version.',false);
+        });
     });
 }
 function showSheetsTestResult(msg,ok){var el=document.getElementById('sheetsTestResult');el.style.display='block';el.style.color=ok===true?'#10B981':ok===false?'#EF4444':'#94A3B8';el.innerHTML=msg;}
