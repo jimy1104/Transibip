@@ -575,6 +575,17 @@ var currentPeriod='day';
 var allDaysData={};
 var allDaysList=[];
 
+// Save only useful readings.
+// This prevents filling Sheets with rows like 0,0,0,0 / SIN USUARIO.
+var MIN_CELL_FOR_SAVE_KG = 0.020;      // any single cell must be at least 20 g
+var MIN_TOTAL_FOR_SAVE_KG = 0.050;     // or total cells at least 50 g
+var MIN_SAVE_INTERVAL_MS = 5000;       // do not save faster than every 5 s
+var FORCE_SAVE_INTERVAL_MS = 30000;    // if active, save at least every 30 s
+var MIN_CHANGE_TO_SAVE_KG = 0.020;     // save if a cell changes by 20 g
+var MIN_ANGLE_CHANGE_TO_SAVE = 1.0;    // save if angle changes by 1 degree
+var lastSavedReading = null;
+var lastSavedAt = 0;
+
 // El ESP32 envia las celdas en kg con 3 decimales.
 var MAX_SENSOR_KG=25.000;
 function sensorPct(v){return Math.max(0,Math.min(100,Math.round((Number(v)||0)/MAX_SENSOR_KG*100)));}
@@ -1336,6 +1347,76 @@ function getLocalDays(){var prefix=getHistoryKey(),days=[];for(var i=0;i<localSt
 function getLocalDay(day){try{return JSON.parse(localStorage.getItem(getHistoryKey()+day)||'[]');}catch(e){return[];}}
 function clearLocalHistory(){var prefix=getHistoryKey(),toDelete=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix))toDelete.push(k);}toDelete.forEach(function(k){localStorage.removeItem(k);});selectedDay='';allDaysData={};allDaysList=[];loadAnalytics();}
 
+
+function rowCellTotal(row){
+  return (Number(row.back)||0) + (Number(row.back2)||0) + (Number(row.bottomL)||0) + (Number(row.bottomR)||0);
+}
+
+function rowMaxCell(row){
+  return Math.max(
+    Number(row.back)||0,
+    Number(row.back2)||0,
+    Number(row.bottomL)||0,
+    Number(row.bottomR)||0
+  );
+}
+
+function rowHasRealCellValue(row){
+  return rowCellTotal(row) >= MIN_TOTAL_FOR_SAVE_KG || rowMaxCell(row) >= MIN_CELL_FOR_SAVE_KG;
+}
+
+function rowChangedEnough(a,b){
+  if(!a || !b) return true;
+
+  var cellDiff = Math.max(
+    Math.abs((Number(a.back)||0)-(Number(b.back)||0)),
+    Math.abs((Number(a.back2)||0)-(Number(b.back2)||0)),
+    Math.abs((Number(a.bottomL)||0)-(Number(b.bottomL)||0)),
+    Math.abs((Number(a.bottomR)||0)-(Number(b.bottomR)||0))
+  );
+
+  var angleDiff = Math.abs((Number(a.angulo)||0)-(Number(b.angulo)||0));
+  var postureChanged = String(a.postura||'') !== String(b.postura||'');
+  var alertChanged = String(a.alerta||'') !== String(b.alerta||'');
+
+  return cellDiff >= MIN_CHANGE_TO_SAVE_KG ||
+         angleDiff >= MIN_ANGLE_CHANGE_TO_SAVE ||
+         postureChanged ||
+         alertChanged;
+}
+
+function shouldSaveReading(row){
+  // Main rule: do not save if no cell has real pressure.
+  if(!rowHasRealCellValue(row)){
+    return {save:false, reason:'Sin carga en celdas'};
+  }
+
+  var now = Date.now();
+
+  if(lastSavedAt && now - lastSavedAt < MIN_SAVE_INTERVAL_MS){
+    return {save:false, reason:'Muy pronto'};
+  }
+
+  if(!lastSavedReading){
+    return {save:true, reason:'Primera lectura con carga'};
+  }
+
+  if(now - lastSavedAt >= FORCE_SAVE_INTERVAL_MS){
+    return {save:true, reason:'Lectura activa periodica'};
+  }
+
+  if(rowChangedEnough(row,lastSavedReading)){
+    return {save:true, reason:'Cambio real'};
+  }
+
+  return {save:false, reason:'Sin cambio importante'};
+}
+
+function markReadingSaved(row){
+  lastSavedReading = Object.assign({}, row);
+  lastSavedAt = Date.now();
+}
+
 function buildReadingRow(){
   return {
     time: nowTime(),
@@ -1379,17 +1460,29 @@ function cacheReadingForUI(row){
 
 function recordReading(){
   if(!connected) return;
-  var row=buildReadingRow();
+
+  var row = buildReadingRow();
+  var decision = shouldSaveReading(row);
+
+  if(!decision.save){
+    // Do not save zero/no-user rows. This is the important change.
+    if(scriptURL){
+      updateSheetsBadge('ok','sin carga: no guardado');
+    }
+    return;
+  }
 
   // Primary mode: save in Google Sheets / Excel file "Datos".
   // LocalStorage is used only if no Apps Script URL is configured.
   if(scriptURL){
     cacheReadingForUI(row);
     saveToSheets(row);
+    markReadingSaved(row);
     return;
   }
 
   saveLocalReading(row);
+  markReadingSaved(row);
   updateSheetsBadge('off','configura URL');
 }
 
@@ -1440,10 +1533,24 @@ function saveToSheets(row){
 
 function updateSheetsBadge(state,msg){
   var b=document.getElementById('sheetsBadge');
-  if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Guardando en Google Sheets: Datos ✓';}
-  else if(state==='err'){b.className='sheets-badge err';b.textContent='🗂 Sheets: error — '+(msg||'');}
-  else if(state==='checking'){b.className='sheets-badge off';b.textContent='🗂 Verificando Sheets...';}
-  else{b.className='sheets-badge off';b.textContent='⚠️ Configura URL de Google Sheets para guardar en Datos';}
+  if(!b) return;
+
+  if(state==='ok'){
+    b.className='sheets-badge ok';
+    b.textContent = msg ? ('🗂 Sheets: '+msg) : '🗂 Guardando en Google Sheets: Datos ✓';
+  }
+  else if(state==='err'){
+    b.className='sheets-badge err';
+    b.textContent='🗂 Sheets: error — '+(msg||'');
+  }
+  else if(state==='checking'){
+    b.className='sheets-badge off';
+    b.textContent='🗂 Verificando Sheets...';
+  }
+  else{
+    b.className='sheets-badge off';
+    b.textContent=msg ? ('⚠️ '+msg) : '⚠️ Configura URL de Google Sheets para guardar en Datos';
+  }
 }
 
 function testSheetsConnection(){
@@ -1569,5 +1676,4 @@ initBackendFields();
 </script>
 </body>
 </html>
-
 
