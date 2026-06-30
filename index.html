@@ -225,7 +225,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     <div class="peso-card" id="pesoCard" style="display:none">
       <div class="peso-label">Peso del paciente (kg)</div>
       <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
-      <button class="btn btn-primary" onclick="enviarPeso()" style="margin-top:0">Enviar peso al ESP32</button>
+      <button class="btn btn-primary" onclick="enviarPeso()" style="margin-top:0">Enviar paciente y peso al ESP32</button>
     </div>
 
     <!-- Back muscles -->
@@ -474,7 +474,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (ángulo)</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Battery</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ADC ESP32 / %</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Google Sheets: Datos ☁️</td></tr>
-<tr><td style="color:#94A3B8;padding:5px 0">Cell order</td><td style="text-align:right;color:#10B981;font-weight:600">BLE 1-2 = Back / BLE 3-4 = Seat</td></tr>
+<tr><td style="color:#94A3B8;padding:5px 0">Cell order</td><td style="text-align:right;color:#10B981;font-weight:600">BLE 1-2 = Seat / BLE 3-4 = Back</td></tr>
       </table>
     </div>
 
@@ -565,7 +565,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 // ══════════════════════════════════════════════════════
 var connected=false, pressureThreshold=0.700;
 var sensorInterval=null, gyroInterval=null, saveInterval=null;
-var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0, deviceMessage="", postureTimeMin=0, deviceAlert=0, deviceMotor="";
+var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0, deviceMessage="", postureTimeMin=0, deviceAlert=0, deviceMotor="", devicePatientName="";
 var scriptURL='', selectedDay='', sheetsOk=false;
 var connMode='demo', bleDevice=null, bleChar=null, bleRxChar=null, bleService=null;
 var BLE_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
@@ -582,7 +582,13 @@ function sensorPct(v){return Math.max(0,Math.min(100,Math.round((Number(v)||0)/M
 function fmtKg(v){v=Number(v)||0;if(Math.abs(v)<0.0005)v=0;return v.toFixed(3)+' kg';}
 function roundKg(v){return Math.round((Number(v)||0)*1000)/1000;}
 function normalizeThreshold(v){v=parseFloat(v);if(isNaN(v)||v<=0)v=0.700;if(v>25)v=v/1000;return Math.max(0,Math.min(25,v));}
-function postureFromAngleAndMsg(msg){msg=(msg||'').toUpperCase();if(msg.indexOf('SIN USUARIO')>=0)return 'SIN USUARIO';if(Math.abs(gyroAngle)<=12)return 'SENTADO';return gyroAngle>0?'INCLINADO +Y':'INCLINADO -Y';}
+function postureFromAngleAndMsg(msg){
+  msg=(msg||'').toUpperCase();
+  // Ya no usamos "Verificar apoyo"; si las celdas no apoyan suficiente, la app muestra esto.
+  if(msg.indexOf('VERIFICAR APOYO')>=0 || msg.indexOf('SIN CARGA')>=0) return 'VERIFICAR APOYO';
+  if(Math.abs(gyroAngle)<=12) return 'SENTADO';
+  return gyroAngle>0?'INCLINADO +Y':'INCLINADO -Y';
+}
 
 // ══════════════════════════════════════════════════════
 // UMBRALES DINÁMICOS + FILTRO ANTI-PICOS
@@ -1067,65 +1073,78 @@ function connectBLE(){
   .catch(function(e){err.textContent='Error: '+e.message;err.style.display='block';});
 }
 
-// ESP32 CSV:
-// Your ESP32 still sends 4 cell values, but for YOUR CURRENT REAL WIRING:
-// p[0],p[1] = BACK cells
-// p[2],p[3] = SEAT cells
+// ESP32 CSV NUEVO:
+// ESP32 manda:
+// SeatL,SeatR,BackB1,BackB2,Y,TiempoMin,BAT,ALERTA,MENSAJE,MOTOR,PACIENTE
 //
-// So the app displays/saves:
-// BackL,BackR,SeatL,SeatR,Y,TiempoMin,BAT,ALERTA,MENSAJE,MOTOR
-//
-// This fixes the problem where values appeared as SEAT but physically were BACK.
+// Por eso la app ahora muestra/guarda:
+// Asiento Izq, Asiento Der, Espalda Izq, Espalda Der, Y, Tiempo, BAT, Alerta, Mensaje, Motor, Paciente.
 function onBleData(e){
   var txt=new TextDecoder().decode(e.target.value).trim();
-  var p=txt.split(',');
-  if(p.length<2) return;
+  if(!txt) return;
 
-  // YOUR CURRENT PHYSICAL ORDER:
-  // p[0],p[1] are BACK, even if the old ESP32 comment said Seat.
-  // p[2],p[3] are SEAT.
-  if(p.length>=8){
-    backP      = filterSensorKg('backP', p[0]);
-    backP2     = filterSensorKg('backP2', p[1]);
-    bottomPL   = filterSensorKg('bottomPL', p[2]);
-    bottomPR   = filterSensorKg('bottomPR', p[3]);
+  // A veces BLE junta más de una línea en una notificación.
+  var lines=txt.split(/\r?\n/);
+  for(var li=0; li<lines.length; li++){
+    var line=lines[li].trim();
+    if(!line) continue;
 
-    gyroAngle  = parseFloat(p[4])||0;
-    postureTimeMin = parseFloat(p[5])||0;
-    batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
-    deviceAlert = parseInt(p[7])||0;
-    var msg=(p[8]||'');
-    deviceMessage=msg;
-    deviceMotor=(p[9]||'');
-    posturaSentado = Math.abs(gyroAngle)<=12 && msg.toUpperCase().indexOf('SIN USUARIO')<0;
-  }
-  // Old format compatible: B1,B2,L,R,angle,posture,battery
-  else if(p.length>=7){
-    backP      = filterSensorKg('backP', p[0]);
-    backP2     = filterSensorKg('backP2', p[1]);
-    bottomPL   = filterSensorKg('bottomPL', p[2]);
-    bottomPR   = filterSensorKg('bottomPR', p[3]);
+    var p=line.split(',');
+    if(p.length<2) continue;
 
-    gyroAngle  = parseFloat(p[4])||0;
-    postureTimeMin = 0;
-    deviceAlert = 0;
-    deviceMotor = "";
-    deviceMessage="";
-    posturaSentado = Math.abs(gyroAngle)<=12;
-    batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
-  }else{
-    // Very old format: back,seatL,seatR,angle,posture
-    backP      = filterSensorKg('backP', p[0]);
-    backP2     = 0;
-    bottomPL   = filterSensorKg('bottomPL', p[1]);
-    bottomPR   = p.length>2 ? filterSensorKg('bottomPR', p[2]) : 0;
-    gyroAngle  = p.length>3?(parseFloat(p[3])||0):0;
-    postureTimeMin = 0;
-    deviceAlert = 0;
-    deviceMotor = "";
-    deviceMessage="";
-    posturaSentado = p.length>4?(parseInt(p[4])===1):true;
-    batteryPct = 0;
+    // Formato nuevo del ESP32:
+    // p[0],p[1] = ASIENTO L/R
+    // p[2],p[3] = ESPALDA B1/B2
+    if(p.length>=10){
+      bottomPL   = filterSensorKg('bottomPL', p[0]);
+      bottomPR   = filterSensorKg('bottomPR', p[1]);
+      backP      = filterSensorKg('backP', p[2]);
+      backP2     = filterSensorKg('backP2', p[3]);
+
+      gyroAngle  = parseFloat(p[4])||0;
+      postureTimeMin = parseFloat(p[5])||0;
+      batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
+      deviceAlert = parseInt(p[7])||0;
+
+      var msg=(p[8]||'');
+      deviceMessage=msg;
+      deviceMotor=(p[9]||'');
+
+      // Si el nombre viene desde ESP32, se usa también para guardar.
+      devicePatientName=(p.length>=11 ? p.slice(10).join(',').trim() : '') || getActivePatientName() || 'Paciente';
+
+      posturaSentado = Math.abs(gyroAngle)<=12 && msg.toUpperCase().indexOf('VERIFICAR APOYO')<0;
+    }
+    // Formato anterior compatible: B1,B2,L,R,angle,posture,battery
+    else if(p.length>=7){
+      backP      = filterSensorKg('backP', p[0]);
+      backP2     = filterSensorKg('backP2', p[1]);
+      bottomPL   = filterSensorKg('bottomPL', p[2]);
+      bottomPR   = filterSensorKg('bottomPR', p[3]);
+
+      gyroAngle  = parseFloat(p[4])||0;
+      postureTimeMin = 0;
+      deviceAlert = 0;
+      deviceMotor = "";
+      deviceMessage="";
+      devicePatientName=getActivePatientName() || 'Paciente';
+      posturaSentado = Math.abs(gyroAngle)<=12;
+      batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
+    }else{
+      // Formato muy antiguo: back,seatL,seatR,angle,posture
+      backP      = filterSensorKg('backP', p[0]);
+      backP2     = 0;
+      bottomPL   = filterSensorKg('bottomPL', p[1]);
+      bottomPR   = p.length>2 ? filterSensorKg('bottomPR', p[2]) : 0;
+      gyroAngle  = p.length>3?(parseFloat(p[3])||0):0;
+      postureTimeMin = 0;
+      deviceAlert = 0;
+      deviceMotor = "";
+      deviceMessage="";
+      devicePatientName=getActivePatientName() || 'Paciente';
+      posturaSentado = p.length>4?(parseInt(p[4])===1):true;
+      batteryPct = 0;
+    }
   }
 
   updateSensorUI();
@@ -1274,7 +1293,7 @@ function updateAngleUI(){
   if(pl){
     var label=connected?postureFromAngleAndMsg(deviceMessage):'---';
     pl.textContent=label;
-    pl.style.color=connected?(label==='SENTADO'?'#10B981':label==='SIN USUARIO'?'#94A3B8':'#F59E0B'):'#F1F5F9';
+    pl.style.color=connected?(label==='SENTADO'?'#10B981':label==='VERIFICAR APOYO'?'#94A3B8':'#F59E0B'):'#F1F5F9';
   }
 }
 
@@ -1305,18 +1324,37 @@ function updateBatteryUI(){
 // ══════════════════════════════════════════════════════
 // PESO → ESP32
 // ══════════════════════════════════════════════════════
+function writeBLEText(data){
+  if(!(connMode==='bt'&&bleRxChar)) return Promise.reject(new Error('Bluetooth no conectado'));
+  var buf=new TextEncoder().encode(data);
+  return bleRxChar.writeValue(buf);
+}
+
+function getPatientNameForESP32(){
+  var name=getActivePatientName();
+  if(!name) name='Paciente';
+  return String(name).trim() || 'Paciente';
+}
+
 function enviarPeso(){
   var peso=parseFloat(document.getElementById('pesoInput').value);
   if(!peso||peso<=0){alert('Ingresa un peso válido');return;}
 
+  var paciente=getPatientNameForESP32();
+
   if(connMode==='bt'&&bleRxChar){
-    var data='PESO='+peso;
-    var buf=new ArrayBuffer(data.length);
-    var view=new Uint8Array(buf);
-    for(var i=0;i<data.length;i++) view[i]=data.charCodeAt(i);
-    bleRxChar.writeValue(buf).then(function(){alert('✓ Enviado: '+peso+' kg');}).catch(function(e){alert('Error: '+e.message);});
+    // Primero manda el nombre del paciente y luego el peso.
+    // El ESP32 debe recibir:
+    // PACIENTE=Nombre
+    // PESO=10
+    writeBLEText('PACIENTE='+paciente+'\n')
+      .then(function(){return new Promise(function(resolve){setTimeout(resolve,150);});})
+      .then(function(){return writeBLEText('PESO='+peso+'\n');})
+      .then(function(){alert('✓ Enviado: '+paciente+' / '+peso+' kg');})
+      .catch(function(e){alert('Error: '+e.message);});
   } else {
-    alert('Demo — peso registrado: '+peso+' kg');
+    devicePatientName=paciente;
+    alert('Demo — paciente registrado: '+paciente+' / '+peso+' kg');
   }
 
   // Guardar peso en el perfil del paciente
@@ -1360,7 +1398,7 @@ function buildReadingRow(){
     mensaje: deviceMessage,
     motor: deviceMotor,
     patientId: activePatientId||'',
-    patientName: getActivePatientName(),
+    patientName: devicePatientName || getActivePatientName() || 'Paciente',
     pesoPaciente: getActivePatientWeight()
   };
 }
@@ -1597,4 +1635,3 @@ initBackendFields();
 </script>
 </body>
 </html>
-
