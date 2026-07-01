@@ -32,6 +32,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .gauge-fill{height:8px;border-radius:4px;transition:width .5s}
 .status-ok{color:#94A3B8;font-size:10px}
 .status-hi{color:#EF4444;font-size:10px;font-weight:600}
+.threshold-note{font-size:10px;color:#64748B;margin-top:3px}
 .crosshair{width:90px;height:90px;border-radius:50%;background:#0F172A;border:1px solid #334155;position:relative;overflow:hidden;flex-shrink:0}
 .hline{position:absolute;left:0;right:0;top:50%;height:1px;background:#334155}
 .vline{position:absolute;top:0;bottom:0;left:50%;width:1px;background:#334155}
@@ -132,6 +133,19 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 .search-box{position:relative;margin-bottom:12px}
 .search-box input{padding-left:36px}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#475569;font-size:14px}
+
+/* ── CHART STYLES / ANALYTICS PERIODS ───────────────────────────── */
+.period-tabs{display:flex;background:#0F172A;border-radius:10px;padding:3px;gap:2px;margin-bottom:14px}
+.period-tab{flex:1;padding:7px 4px;border:none;background:transparent;color:#94A3B8;font-size:11px;font-weight:600;border-radius:7px;cursor:pointer;text-align:center}
+.period-tab.active{background:#10B981;color:#fff}
+.chart-canvas{width:100%;height:180px;display:block}
+.chart-tooltip{position:absolute;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:7px 10px;font-size:11px;color:#F1F5F9;pointer-events:none;display:none;white-space:nowrap;z-index:5;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.chart-area{position:relative;width:100%;margin-top:6px}
+.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.metric-mini{background:#0F172A;border:1px solid #334155;border-radius:9px;padding:9px;text-align:center}
+.metric-mini-val{font-size:15px;font-weight:700;font-family:monospace;color:#F1F5F9}
+.metric-mini-label{font-size:9px;color:#94A3B8;margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -205,33 +219,40 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <button onclick="doDisconnect()" style="background:none;border:1px solid #334155;color:#94A3B8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer">Disconnect</button>
     </div>
 
-    <div id="sheetsBadge" class="sheets-badge off">💾 Historial local activo</div>
+    <div id="sheetsBadge" class="sheets-badge off">⚠️ Configura URL de Google Sheets para guardar en Datos</div>
 
     <!-- Peso card -->
     <div class="peso-card" id="pesoCard" style="display:none">
       <div class="peso-label">Peso del paciente (kg)</div>
       <input type="number" class="peso-input" id="pesoInput" placeholder="0" inputmode="numeric">
-      <button class="btn btn-primary" onclick="enviarPeso()" style="margin-top:0">Enviar peso al ESP32</button>
+      <button class="btn btn-primary" onclick="enviarPeso()" style="margin-top:0">Enviar paciente y peso al ESP32</button>
     </div>
 
     <!-- Back muscles -->
     <div class="card">
       <div class="card-title">Back muscles map</div>
       <div style="display:flex;justify-content:center;margin:8px 0">
-        <svg width="160" height="185" viewBox="0 0 160 185">
-          <ellipse cx="80" cy="16" rx="16" ry="18" fill="#475569"/>
-          <ellipse cx="64" cy="16" rx="5" ry="7" fill="#475569"/>
-          <ellipse cx="96" cy="16" rx="5" ry="7" fill="#475569"/>
-          <rect x="73" y="32" width="14" height="12" rx="4" fill="#475569"/>
-          <ellipse id="m-trap-l" cx="48" cy="60" rx="28" ry="13" fill="#334155"/>
-          <ellipse id="m-trap-r" cx="112" cy="60" rx="28" ry="13" fill="#334155"/>
-          <rect id="m-rhom-l" x="32" y="76" width="34" height="20" rx="5" fill="#334155"/>
-          <rect id="m-rhom-r" x="94" y="76" width="34" height="20" rx="5" fill="#334155"/>
-          <rect id="m-lat-l" x="24" y="98" width="40" height="26" rx="6" fill="#334155"/>
-          <rect id="m-lat-r" x="96" y="98" width="40" height="26" rx="6" fill="#334155"/>
-          <rect id="m-erect-l" x="30" y="126" width="32" height="20" rx="5" fill="#334155"/>
-          <rect id="m-erect-r" x="98" y="126" width="32" height="20" rx="5" fill="#334155"/>
-          <rect x="76" y="44" width="8" height="108" rx="3" fill="#1E40AF" id="m-spine"/>
+        <svg width="180" height="200" viewBox="0 0 180 200">
+          <ellipse cx="90" cy="16" rx="16" ry="18" fill="#475569"/>
+          <ellipse cx="74" cy="16" rx="5" ry="7" fill="#475569"/>
+          <ellipse cx="106" cy="16" rx="5" ry="7" fill="#475569"/>
+          <rect x="83" y="32" width="14" height="12" rx="4" fill="#475569"/>
+          <ellipse id="m-trap-l" cx="55" cy="60" rx="30" ry="13" fill="#334155"/>
+          <ellipse id="m-trap-r" cx="125" cy="60" rx="30" ry="13" fill="#334155"/>
+          <rect id="m-rhom-l" x="34" y="76" width="40" height="20" rx="5" fill="#334155"/>
+          <rect id="m-rhom-r" x="106" y="76" width="40" height="20" rx="5" fill="#334155"/>
+          <rect id="m-lat-l" x="26" y="98" width="46" height="28" rx="7" fill="#334155"/>
+          <rect id="m-lat-r" x="108" y="98" width="46" height="28" rx="7" fill="#334155"/>
+          <rect id="m-erect-l" x="34" y="128" width="38" height="22" rx="6" fill="#334155"/>
+          <rect id="m-erect-r" x="108" y="128" width="38" height="22" rx="6" fill="#334155"/>
+          <rect x="86" y="44" width="8" height="116" rx="3" fill="#1E40AF" id="m-spine"/>
+          <!-- Indicadores de celdas en espalda: izquierda/derecha -->
+          <circle id="m-back-cell-l" cx="72" cy="110" r="12" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+          <circle id="m-back-cell-r" cx="108" cy="110" r="12" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+          <text x="72" y="114" font-size="9" fill="#F1F5F9" text-anchor="middle" font-weight="700">E1</text>
+          <text x="108" y="114" font-size="9" fill="#F1F5F9" text-anchor="middle" font-weight="700">E2</text>
+          <text x="54" y="188" font-size="9" fill="#94A3B8" text-anchor="middle">Espalda Izq</text>
+          <text x="126" y="188" font-size="9" fill="#94A3B8" text-anchor="middle">Espalda Der</text>
         </svg>
       </div>
       <div class="legend-row">
@@ -263,12 +284,20 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       </div>
     </div>
 
-    <!-- Sensor espalda -->
+    <!-- Sensor espalda izquierdo -->
     <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor espalda (celda 50kg)</span><div class="fsr-led" id="backLed"></div></div>
+      <div class="fsr-header"><span class="fsr-title">Sensor espalda IZQ (celda)</span><div class="fsr-led" id="backLed"></div></div>
       <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
       <div class="gauge-track"><div class="gauge-fill" id="backFill" style="width:0%;background:#10B981"></div></div>
       <div id="backStatus" class="status-ok">Normal</div>
+    </div>
+
+    <!-- Sensor espalda derecho / nuevo -->
+    <div class="fsr-card">
+      <div class="fsr-header"><span class="fsr-title">Sensor espalda DER (celda nueva)</span><div class="fsr-led" id="backLed2"></div></div>
+      <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal2" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="backFill2" style="width:0%;background:#10B981"></div></div>
+      <div id="backStatus2" class="status-ok">Normal</div>
     </div>
 
     <!-- Sensor asiento izquierdo -->
@@ -300,6 +329,14 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
           <div id="posturaLabel" style="font-size:18px;font-weight:700;color:#F1F5F9">---</div>
         </div>
       </div>
+      <div style="margin-top:12px;background:#0F172A;border:1px solid #334155;border-radius:10px;padding:10px 12px">
+        <div class="row" style="margin-bottom:6px">
+          <span style="font-size:11px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Batería ESP32</span>
+          <span id="batteryVal" style="font-size:16px;font-weight:700;color:#10B981;font-family:monospace">---%</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="batteryFill" style="width:0%;background:#10B981"></div></div>
+        <div id="batteryStatus" class="status-ok">Sin lectura</div>
+      </div>
     </div>
   </div>
 
@@ -310,7 +347,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="screen-title">Pacientes</div>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()" style="color:#EF4444;border-color:#EF4444">Cerrar sesión</button>
     </div>
-    <div class="screen-sub">Sesión activa del paciente registrado</div>
+    <div class="screen-sub">Sesión activa del paciente registrado en Google Sheets</div>
 
     <div id="activePatientCard" style="display:none;background:#0A1F18;border:1px solid #10B981;border-radius:12px;padding:16px;margin-bottom:12px">
       <div style="font-size:11px;color:#10B981;font-weight:600;margin-bottom:10px">● PACIENTE ACTIVO</div>
@@ -330,7 +367,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
   <div class="screen" id="s-analytics">
     <div style="padding-top:env(safe-area-inset-top,12px)"></div>
     <div class="screen-title">Analytics</div>
-    <div class="screen-sub">Historial por paciente y día</div>
+    <div class="screen-sub">Estadísticas de postura: diario, semanal, mensual y anual</div>
 
     <div class="stat-cards">
       <div class="stat-card"><div class="stat-num" id="stat-posture" style="color:#10B981">--%</div><div class="stat-label">Buena postura</div></div>
@@ -338,27 +375,49 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="stat-card"><div class="stat-num" id="stat-bottom" style="color:#06B6D4">---</div><div class="stat-label">Avg asiento</div></div>
     </div>
 
-    <div style="font-size:11px;color:#94A3B8;margin-bottom:6px;font-weight:600">SELECCIONA UN DÍA</div>
-    <div class="day-selector" id="daySelector"></div>
+    <div class="card">
+      <div class="card-title">Período</div>
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod('day',this)">Diario</button>
+        <button class="period-tab" onclick="setPeriod('week',this)">Semanal</button>
+        <button class="period-tab" onclick="setPeriod('month',this)">Mensual</button>
+        <button class="period-tab" onclick="setPeriod('year',this)">Anual</button>
+      </div>
+
+      <div id="dayPickerWrap">
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:6px;font-weight:600">SELECCIONA UN DÍA</div>
+        <div class="day-selector" id="daySelector"></div>
+      </div>
+
+      <div class="chart-area">
+        <canvas id="mainChart" class="chart-canvas" height="180"></canvas>
+        <div class="chart-tooltip" id="chartTooltip"></div>
+      </div>
+
+      <div class="legend-row" style="margin-top:10px">
+        <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Espalda Izq</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div>Espalda Der</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#06B6D4"></div>Asiento Izq</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#818CF8"></div>Asiento Der</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.35)"></div>Umbral</div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-mini"><div class="metric-mini-val" id="metric-back-diff">---</div><div class="metric-mini-label">Dif. espalda L/R</div></div>
+        <div class="metric-mini"><div class="metric-mini-val" id="metric-seat-diff">---</div><div class="metric-mini-label">Dif. asiento L/R</div></div>
+      </div>
+    </div>
 
     <div class="row" style="gap:8px;margin-bottom:12px">
       <button class="btn btn-secondary" onclick="loadAnalytics()" id="refreshBtn" style="margin:0">🔄 Actualizar</button>
-      <button class="btn btn-secondary" onclick="if(confirm('¿Borrar historial?'))clearLocalHistory()" style="margin:0;max-width:130px">🗑 Borrar</button>
+      <button class="btn btn-secondary" onclick="if(confirm('¿Borrar historial local?'))clearLocalHistory()" style="margin:0;max-width:140px">🗑 Borrar local</button>
     </div>
 
     <div class="card">
-      <div class="card-title" id="historyTitle">Historial del día</div>
+      <div class="card-title" id="historyTitle">Lecturas recientes</div>
       <div id="historyList"><div class="empty-state">Selecciona un día</div></div>
     </div>
-    <div class="card">
-      <div class="card-title">Presión promedio</div>
-      <div class="bars" id="chartBars" style="height:80px"></div>
-      <div class="legend-row">
-        <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Espalda</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#06B6D4"></div>Asiento Izq</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#818CF8"></div>Asiento Der</div>
-      </div>
-    </div>
+
     <div class="card">
       <div class="card-title">Consejos de postura</div>
       <div id="insights"><div class="empty-state" style="padding:10px 0">Sin datos para analizar</div></div>
@@ -384,7 +443,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 
     <div class="card">
       <div class="card-title">🗂 Google Sheets</div>
-      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">URL del Apps Script del paciente activo. Se guarda por paciente.</div>
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">URL del Apps Script. Se usa para login, registro y guardar datos en Sheets.</div>
       <div class="field-label">URL del Apps Script</div>
       <input class="input-field" id="scriptURL" placeholder="https://script.google.com/macros/s/..." style="font-size:12px">
       <div id="sheetsTestResult" style="font-size:11px;margin-bottom:6px;display:none"></div>
@@ -400,8 +459,8 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         </div>
         <button class="switch on" id="buzzerSwitch" onclick="toggleBuzzer()"></button>
       </div>
-      <div class="field-label">Buzzer threshold (0–1023)</div>
-      <input class="input-field" type="number" id="buzzerThresh" value="600" min="0" max="1023">
+      <div class="field-label">Umbral manual si no hay peso (kg)</div>
+      <input class="input-field" type="number" id="buzzerThresh" value="0.700" min="0" max="25" step="0.001" oninput="onThreshInput()">
     </div>
 
     
@@ -410,10 +469,12 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="card-title">Device info</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse">
         <tr><td style="color:#94A3B8;padding:5px 0">Board</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ESP32</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Back sensor</td><td style="text-align:right;color:#F1F5F9;font-weight:600">Celda HX711 20kg</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Seat L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711 50kg</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (X/Y)</td></tr>
-        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Local + Google Sheets ☁️</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Back L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Seat L+R</td><td style="text-align:right;color:#F1F5F9;font-weight:600">2x Celda HX711</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (ángulo)</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Battery</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ADC ESP32 / %</td></tr>
+        <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Google Sheets: Datos ☁️</td></tr>
+<tr><td style="color:#94A3B8;padding:5px 0">Cell order</td><td style="text-align:right;color:#10B981;font-weight:600">BLE 1-2 = Seat / BLE 3-4 = Back</td></tr>
       </table>
     </div>
 
@@ -453,6 +514,8 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <input class="input-field" id="loginName" placeholder="Tu nombre completo">
       <div class="field-label">Contraseña</div>
       <input class="input-field" type="password" id="loginPass" placeholder="Tu contraseña">
+      <div class="field-label">URL Google Sheets / Apps Script *</div>
+      <input class="input-field" id="loginSheets" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px">
       <button class="btn btn-primary" onclick="doLogin()" style="margin-top:4px">Entrar</button>
     </div>
 
@@ -500,15 +563,158 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 // ══════════════════════════════════════════════════════
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════
-var connected=false, pressureThreshold=700;
+var connected=false, pressureThreshold=0.700;
 var sensorInterval=null, gyroInterval=null, saveInterval=null;
-var backP=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true;
+var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0, deviceMessage="", postureTimeMin=0, deviceAlert=0, deviceMotor="", devicePatientName="";
 var scriptURL='', selectedDay='', sheetsOk=false;
 var connMode='demo', bleDevice=null, bleChar=null, bleRxChar=null, bleService=null;
 var BLE_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 var BLE_TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 var BLE_RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 var activePatientId=null;
+var currentPeriod='day';
+var allDaysData={};
+var allDaysList=[];
+
+// El ESP32 envia las celdas en kg con 3 decimales.
+var MAX_SENSOR_KG=25.000;
+function sensorPct(v){return Math.max(0,Math.min(100,Math.round((Number(v)||0)/MAX_SENSOR_KG*100)));}
+function fmtKg(v){v=Number(v)||0;if(Math.abs(v)<0.0005)v=0;return v.toFixed(3)+' kg';}
+function roundKg(v){return Math.round((Number(v)||0)*1000)/1000;}
+function normalizeThreshold(v){v=parseFloat(v);if(isNaN(v)||v<=0)v=0.700;if(v>25)v=v/1000;return Math.max(0,Math.min(25,v));}
+function postureFromAngleAndMsg(msg){
+  msg=(msg||'').toUpperCase();
+  // Ya no usamos "Verificar apoyo"; si las celdas no apoyan suficiente, la app muestra esto.
+  if(msg.indexOf('VERIFICAR APOYO')>=0 || msg.indexOf('SIN CARGA')>=0) return 'VERIFICAR APOYO';
+  if(Math.abs(gyroAngle)<=12) return 'SENTADO';
+  return gyroAngle>0?'INCLINADO +Y':'INCLINADO -Y';
+}
+
+// ══════════════════════════════════════════════════════
+// UMBRALES DINÁMICOS + FILTRO ANTI-PICOS
+// ══════════════════════════════════════════════════════
+// The app no longer turns red at 0.700 kg if the patient weighs 50 kg.
+// It calculates separate thresholds for seat and back using patient weight.
+var sensorFilterState={
+  backP:{last:0,candidate:null,count:0},
+  backP2:{last:0,candidate:null,count:0},
+  bottomPL:{last:0,candidate:null,count:0},
+  bottomPR:{last:0,candidate:null,count:0}
+};
+
+function getActivePatientWeightKg(){
+  var v=parseFloat(document.getElementById('pesoInput') ? document.getElementById('pesoInput').value : '');
+  if(v>5 && v<200) return v;
+
+  if(activePatientId){
+    var pts=getPatients();
+    var p=pts.find(function(x){return x.id===activePatientId;});
+    if(p){
+      var wp=parseFloat(p.peso);
+      if(wp>5 && wp<200) return wp;
+    }
+  }
+  return 0;
+}
+
+function getPressureLimits(){
+  var w=getActivePatientWeightKg();
+
+  // Fallback when the app does not know the patient weight yet.
+  if(!w){
+    return {
+      weight:0,
+      backWarn:pressureThreshold,
+      backSevere:pressureThreshold*1.6,
+      seatWarn:pressureThreshold,
+      seatSevere:pressureThreshold*1.6,
+      backDiff:1.0,
+      seatDiff:2.0,
+      dynamic:false
+    };
+  }
+
+  // Same logic as the ESP32:
+  // seat load ≈ 60% of body weight, split in 2 ischial cells
+  // back load ≈ 15% of body weight, split in 2 T10 back cells
+  var seat=w*0.60;
+  var back=w*0.15;
+
+  return {
+    weight:w,
+    seatWarn:Math.max(3.0,(seat/2.0)*1.30),
+    seatSevere:Math.max(4.5,(seat/2.0)*1.60),
+    backWarn:Math.max(1.5,(back/2.0)*1.50),
+    backSevere:Math.max(2.5,(back/2.0)*1.90),
+    seatDiff:Math.max(2.0,seat*0.20),
+    backDiff:Math.max(1.0,back*0.30),
+    dynamic:true
+  };
+}
+
+function pctByLimit(v,limit){
+  limit=Number(limit)||1;
+  return Math.max(0,Math.min(100,Math.round((Number(v)||0)/(limit*1.25)*100)));
+}
+
+function isBadNumber(v){
+  return isNaN(v)||!isFinite(v);
+}
+
+function cleanSensorKg(v){
+  v=parseFloat(v);
+  if(isBadNumber(v)) return 0;
+  if(Math.abs(v)<0.005) return 0;
+  if(v<0) return 0;
+  if(v>25) return 25;
+  return Math.round(v*1000)/1000;
+}
+
+function filterSensorKg(name,next){
+  next=cleanSensorKg(next);
+  var st=sensorFilterState[name]||{last:0,candidate:null,count:0};
+  var last=st.last||0;
+  var jump=Math.abs(next-last);
+
+  // Reject a single random spike, common with a floating HX711 wire.
+  // If the spike repeats for 3 packets, accept it as real.
+  var suspicious=(last<1.0 && next>5.0) || (jump>4.0 && next>last*2.5+1.0);
+
+  if(suspicious){
+    if(st.candidate!==null && Math.abs(next-st.candidate)<1.0){
+      st.count++;
+    }else{
+      st.candidate=next;
+      st.count=1;
+    }
+
+    sensorFilterState[name]=st;
+
+    if(st.count<3){
+      return st.last;
+    }
+  }
+
+  st.last=next;
+  st.candidate=null;
+  st.count=0;
+  sensorFilterState[name]=st;
+  return next;
+}
+
+function resetFilterState(){
+  Object.keys(sensorFilterState).forEach(function(k){
+    sensorFilterState[k]={last:0,candidate:null,count:0};
+  });
+}
+
+function anyHighByLimits(r){
+  var lim=getPressureLimits();
+  return (r.back||0)>=lim.backWarn ||
+         (r.back2||0)>=lim.backWarn ||
+         (r.bottomL||0)>=lim.seatWarn ||
+         (r.bottomR||0)>=lim.seatWarn;
+}
 
 // ══════════════════════════════════════════════════════
 // AUTH HELPERS
@@ -517,6 +723,122 @@ function getPatients(){try{return JSON.parse(localStorage.getItem('tb_patients')
 function savePatients(arr){localStorage.setItem('tb_patients',JSON.stringify(arr));}
 function genId(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);}
 function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+
+// ══════════════════════════════════════════════════════
+// REAL BACKEND HELPERS: Google Sheets login + JSONP no-CORS
+// ══════════════════════════════════════════════════════
+function getSavedBackendURL(){
+  return localStorage.getItem('tb_backend_url') || localStorage.getItem('lastScriptURL') || '';
+}
+
+function setBackendURL(url){
+  url=(url||'').trim();
+  if(!url) return;
+  scriptURL=url;
+  localStorage.setItem('tb_backend_url',url);
+  localStorage.setItem('lastScriptURL',url);
+
+  ['loginSheets','regSheets','scriptURL','editSheets'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && !el.value) el.value=url;
+  });
+}
+
+function getAuthBackendURL(){
+  var ids=['loginSheets','regSheets','scriptURL','editSheets'];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(el && el.value && el.value.trim()) return el.value.trim();
+  }
+  return getSavedBackendURL();
+}
+
+function initBackendFields(){
+  var url=getSavedBackendURL();
+  if(!url) return;
+  ['loginSheets','regSheets','scriptURL','editSheets'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && !el.value) el.value=url;
+  });
+  scriptURL=url;
+}
+
+function sheetsJSONP(params, customUrl){
+  return new Promise(function(resolve,reject){
+    var url=(customUrl||scriptURL||getAuthBackendURL()||'').trim();
+    if(!url){reject(new Error('No Apps Script URL'));return;}
+
+    var cb='tb_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    params=params||{};
+    params.callback=cb;
+
+    var qs=new URLSearchParams(params).toString();
+    var s=document.createElement('script');
+    var done=false;
+
+    window[cb]=function(data){
+      done=true;
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      if(s.parentNode) s.parentNode.removeChild(s);
+      resolve(data);
+    };
+
+    s.onerror=function(){
+      if(done) return;
+      done=true;
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      if(s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('JSONP load error'));
+    };
+
+    s.src=url+(url.indexOf('?')>=0?'&':'?')+qs;
+    document.body.appendChild(s);
+
+    setTimeout(function(){
+      if(done) return;
+      done=true;
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      if(s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('JSONP timeout'));
+    },12000);
+  });
+}
+
+function upsertBackendPatient(patient, url){
+  var pts=getPatients();
+  var name=(patient.name||patient.nombre||patient.paciente||'Paciente').trim();
+  var found=pts.find(function(x){
+    return String(x.name||'').toLowerCase()===name.toLowerCase();
+  });
+
+  var id=found ? found.id : ('remote_'+(patient.id||genId()));
+  var obj={
+    id:id,
+    name:name,
+    peso:String(patient.peso||patient.weight||''),
+    password:found ? (found.password||'') : '',
+    sheetsURL:url,
+    therapist:patient.therapist||patient.terapeuta||'',
+    createdAt: found ? (found.createdAt||new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+    remoteId:patient.id||''
+  };
+
+  if(found){
+    pts=pts.map(function(x){return x.id===found.id?Object.assign({},x,obj):x;});
+  }else{
+    pts.unshift(obj);
+  }
+
+  savePatients(pts);
+  return id;
+}
+
+function loginFromBackendPatient(patient, url){
+  setBackendURL(url);
+  var id=upsertBackendPatient(patient, url);
+  loginAs(id);
+}
 
 function switchAuthTab(tab){
   document.getElementById('loginTabBtn').classList.toggle('active',tab==='login');
@@ -528,9 +850,43 @@ function switchAuthTab(tab){
 function doLogin(){
   var name=document.getElementById('loginName').value.trim();
   var pass=document.getElementById('loginPass').value;
+  var url=getAuthBackendURL();
   var err=document.getElementById('loginError');
+
   err.style.display='none';
-  if(!name||!pass){err.textContent='Completa todos los campos.';err.style.display='block';return;}
+
+  if(!name||!pass){
+    err.textContent='Completa nombre y contraseña.';
+    err.style.display='block';
+    return;
+  }
+
+  // Real mode: login against Google Sheets backend.
+  if(url){
+    setBackendURL(url);
+    err.textContent='Conectando con Google Sheets...';
+    err.style.display='block';
+    err.style.color='#94A3B8';
+
+    sheetsJSONP({action:'login',name:name,password:pass},url)
+      .then(function(d){
+        err.style.color='';
+        if(d.status==='ok'&&d.patient){
+          loginFromBackendPatient(d.patient,url);
+        }else{
+          err.textContent=d.message||'Login no válido.';
+          err.style.display='block';
+        }
+      })
+      .catch(function(){
+        err.style.color='';
+        err.textContent='No se pudo conectar con el backend. Revisa URL / deployment.';
+        err.style.display='block';
+      });
+    return;
+  }
+
+  // Local fallback only for offline testing.
   var pts=getPatients();
   var p=pts.find(function(x){return x.name.toLowerCase()===name.toLowerCase()&&x.password===pass;});
   if(!p){err.textContent='Nombre o contraseña incorrectos.';err.style.display='block';return;}
@@ -541,16 +897,47 @@ function doRegister(){
   var name=document.getElementById('regName').value.trim();
   var peso=document.getElementById('regPeso').value.trim();
   var pass=document.getElementById('regPass').value;
-  var sheets=document.getElementById('regSheets').value.trim();
+  var sheets=document.getElementById('regSheets').value.trim() || getAuthBackendURL();
   var therapist=document.getElementById('regTherapist').value.trim();
   var err=document.getElementById('registerError');
+
   err.style.display='none';
+
   if(!name){err.textContent='El nombre es obligatorio.';err.style.display='block';return;}
+  if(!peso||parseFloat(peso)<=0){err.textContent='El peso es obligatorio.';err.style.display='block';return;}
   if(!pass||pass.length<4){err.textContent='La contraseña debe tener mín. 4 caracteres.';err.style.display='block';return;}
+
+  // Real mode: register account in Google Sheets backend.
+  if(sheets){
+    setBackendURL(sheets);
+    err.textContent='Creando cuenta en Google Sheets...';
+    err.style.display='block';
+    err.style.color='#94A3B8';
+
+    sheetsJSONP({action:'register',name:name,peso:peso,password:pass,therapist:therapist},sheets)
+      .then(function(d){
+        err.style.color='';
+        if(d.status==='ok'&&d.patient){
+          loginFromBackendPatient(d.patient,sheets);
+        }else{
+          err.textContent=d.message||'No se pudo registrar.';
+          err.style.display='block';
+        }
+      })
+      .catch(function(){
+        err.style.color='';
+        err.textContent='No se pudo conectar con Google Sheets. Revisa URL / deployment.';
+        err.style.display='block';
+      });
+    return;
+  }
+
+  // Local fallback only for offline testing.
   var pts=getPatients();
   if(pts.find(function(x){return x.name.toLowerCase()===name.toLowerCase();})){
     err.textContent='Ya existe un paciente con ese nombre.';err.style.display='block';return;
   }
+
   var newP={id:genId(),name:name,peso:peso||'',password:pass,sheetsURL:sheets,therapist:therapist,createdAt:new Date().toISOString().split('T')[0]};
   pts.unshift(newP);
   savePatients(pts);
@@ -562,13 +949,13 @@ function loginAs(id){
   localStorage.setItem('activePatientId',id);
   var pts=getPatients();
   var p=pts.find(function(x){return x.id===id;});
-  if(p&&p.sheetsURL) scriptURL=p.sheetsURL;
+  if(p&&p.sheetsURL) setBackendURL(p.sheetsURL);
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('scriptURL').value=scriptURL;
-  pressureThreshold=parseInt(localStorage.getItem('threshold')||'700');
-  document.getElementById('pressureThresh').value=pressureThreshold;
-  document.getElementById('curThresh').textContent=pressureThreshold;
+  pressureThreshold=normalizeThreshold(localStorage.getItem('threshold')||'0.700');
+  var buz=document.getElementById('buzzerThresh');
+  if(buz) buz.value=pressureThreshold.toFixed(3);
   refreshPatientBanner();
   updateSheetsBadge(scriptURL?'ok':'off');
 }
@@ -686,17 +1073,83 @@ function connectBLE(){
   .catch(function(e){err.textContent='Error: '+e.message;err.style.display='block';});
 }
 
-// ESP32 envía CSV: "pesoE,pesoL,pesoR,angulo,postura(1=sent/0=pie)"
+// ESP32 CSV NUEVO:
+// ESP32 manda:
+// SeatL,SeatR,BackB1,BackB2,Y,TiempoMin,BAT,ALERTA,MENSAJE,MOTOR,PACIENTE
+//
+// Por eso la app ahora muestra/guarda:
+// Asiento Izq, Asiento Der, Espalda Izq, Espalda Der, Y, Tiempo, BAT, Alerta, Mensaje, Motor, Paciente.
 function onBleData(e){
   var txt=new TextDecoder().decode(e.target.value).trim();
-  var p=txt.split(',');
-  if(p.length<2) return;
-  backP   = parseFloat(p[0])||0;
-  bottomPL= parseFloat(p[1])||0;
-  bottomPR= p.length>2?(parseFloat(p[2])||0):0;
-  gyroAngle = p.length>3?(parseFloat(p[3])||0):0;
-  posturaSentado = p.length>4?(parseInt(p[4])===1):true;
-  updateSensorUI();updateAngleUI();
+  if(!txt) return;
+
+  // A veces BLE junta más de una línea en una notificación.
+  var lines=txt.split(/\r?\n/);
+  for(var li=0; li<lines.length; li++){
+    var line=lines[li].trim();
+    if(!line) continue;
+
+    var p=line.split(',');
+    if(p.length<2) continue;
+
+    // Formato nuevo del ESP32:
+    // p[0],p[1] = ASIENTO L/R
+    // p[2],p[3] = ESPALDA B1/B2
+    if(p.length>=10){
+      bottomPL   = filterSensorKg('bottomPL', p[0]);
+      bottomPR   = filterSensorKg('bottomPR', p[1]);
+      backP      = filterSensorKg('backP', p[2]);
+      backP2     = filterSensorKg('backP2', p[3]);
+
+      gyroAngle  = parseFloat(p[4])||0;
+      postureTimeMin = parseFloat(p[5])||0;
+      batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
+      deviceAlert = parseInt(p[7])||0;
+
+      var msg=(p[8]||'');
+      deviceMessage=msg;
+      deviceMotor=(p[9]||'');
+
+      // Si el nombre viene desde ESP32, se usa también para guardar.
+      devicePatientName=(p.length>=11 ? p.slice(10).join(',').trim() : '') || getActivePatientName() || 'Paciente';
+
+      posturaSentado = Math.abs(gyroAngle)<=12 && msg.toUpperCase().indexOf('VERIFICAR APOYO')<0;
+    }
+    // Formato anterior compatible: B1,B2,L,R,angle,posture,battery
+    else if(p.length>=7){
+      backP      = filterSensorKg('backP', p[0]);
+      backP2     = filterSensorKg('backP2', p[1]);
+      bottomPL   = filterSensorKg('bottomPL', p[2]);
+      bottomPR   = filterSensorKg('bottomPR', p[3]);
+
+      gyroAngle  = parseFloat(p[4])||0;
+      postureTimeMin = 0;
+      deviceAlert = 0;
+      deviceMotor = "";
+      deviceMessage="";
+      devicePatientName=getActivePatientName() || 'Paciente';
+      posturaSentado = Math.abs(gyroAngle)<=12;
+      batteryPct = Math.max(0,Math.min(100,parseFloat(p[6])||0));
+    }else{
+      // Formato muy antiguo: back,seatL,seatR,angle,posture
+      backP      = filterSensorKg('backP', p[0]);
+      backP2     = 0;
+      bottomPL   = filterSensorKg('bottomPL', p[1]);
+      bottomPR   = p.length>2 ? filterSensorKg('bottomPR', p[2]) : 0;
+      gyroAngle  = p.length>3?(parseFloat(p[3])||0):0;
+      postureTimeMin = 0;
+      deviceAlert = 0;
+      deviceMotor = "";
+      deviceMessage="";
+      devicePatientName=getActivePatientName() || 'Paciente';
+      posturaSentado = p.length>4?(parseInt(p[4])===1):true;
+      batteryPct = 0;
+    }
+  }
+
+  updateSensorUI();
+  updateAngleUI();
+  updateBatteryUI();
 }
 function onBleDisconnect(){if(connected)doDisconnect();}
 
@@ -751,293 +1204,403 @@ function doDisconnect(){
 // ══════════════════════════════════════════════════════
 function startSensors(){
   sensorInterval=setInterval(function(){
-    backP=Math.floor(300+Math.random()*723);
-    bottomPL=Math.floor(200+Math.random()*823);
-    bottomPR=Math.floor(200+Math.random()*823);
-    updateSensorUI();
+    backP=roundKg(0.010+Math.random()*4.500);
+    backP2=roundKg(0.010+Math.random()*4.500);
+    bottomPL=roundKg(0.010+Math.random()*12.000);
+    bottomPR=roundKg(0.010+Math.random()*12.000);
+    batteryPct=Math.max(15,Math.min(100,batteryPct?batteryPct-(Math.random()*0.25):92));
+    updateSensorUI();updateBatteryUI();
   },1500);
   gyroInterval=setInterval(function(){
     gyroAngle=Math.round((Math.random()*60-30)*10)/10;
-    posturaSentado=(Math.abs(gyroAngle)<35);
+    posturaSentado=(Math.abs(gyroAngle)<=12);
     updateAngleUI();
   },800);
 }
 function stopSensors(){clearInterval(sensorInterval);clearInterval(gyroInterval);}
-function resetSensors(){backP=0;bottomPL=0;bottomPR=0;gyroXv=0;gyroYv=0;updateSensorUI();updateAngleUI();}
-
-function updateSensorUI(){
-  var th=pressureThreshold;
-  var bH=backP>=th,btHL=bottomPL>=th,btHR=bottomPR>=th;
-  // Espalda
-  document.getElementById('backVal').textContent=backP;
-  document.getElementById('backVal').style.color=bH?'#EF4444':'#10B981';
-  document.getElementById('backFill').style.width=Math.round(backP/1023*100)+'%';
-  document.getElementById('backFill').style.background=bH?'#EF4444':'#10B981';
-  document.getElementById('backStatus').textContent=bH?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('backStatus').className=bH?'status-hi':'status-ok';
-  document.getElementById('backLed').className='fsr-led'+(bH?' on':'');
-  // Asiento Izq
-  document.getElementById('bottomValL').textContent=bottomPL;
-  document.getElementById('bottomValL').style.color=btHL?'#EF4444':'#10B981';
-  document.getElementById('bottomFillL').style.width=Math.round(bottomPL/1023*100)+'%';
-  document.getElementById('bottomFillL').style.background=btHL?'#EF4444':'#10B981';
-  document.getElementById('bottomStatusL').textContent=btHL?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('bottomStatusL').className=btHL?'status-hi':'status-ok';
-  document.getElementById('bottomLedL').className='fsr-led'+(btHL?' on':'');
-  // Asiento Der
-  document.getElementById('bottomValR').textContent=bottomPR;
-  document.getElementById('bottomValR').style.color=btHR?'#EF4444':'#10B981';
-  document.getElementById('bottomFillR').style.width=Math.round(bottomPR/1023*100)+'%';
-  document.getElementById('bottomFillR').style.background=btHR?'#EF4444':'#10B981';
-  document.getElementById('bottomStatusR').textContent=btHR?'⚠ HIGH PRESSURE':'Normal';
-  document.getElementById('bottomStatusR').className=btHR?'status-hi':'status-ok';
-  document.getElementById('bottomLedR').className='fsr-led'+(btHR?' on':'');
-  // Músculos
-  updateMuscles(bH,btHL||btHR,btHL,btHR);
+function resetSensors(){
+  backP=0;backP2=0;bottomPL=0;bottomPR=0;gyroAngle=0;batteryPct=0;deviceMessage="";
+  resetFilterState();
+  updateSensorUI();updateAngleUI();updateBatteryUI();
 }
 
-function updateMuscles(bH,btH,btHL,btHR){
-  // BLE nuevo: backP/backP2=ASIENTO → glúteos | bottomPL/bottomPR=ESPALDA → músculos espalda
-  var bc=bottomPL>0?(btHL?'#EF4444':'#93C5FD'):'#334155';   // espalda izq → back diagram
-  var bl=bottomPL>0?(btHL?'#FCA5A5':'#BFDBFE'):'#475569';   // espalda izq soft
-  var btcL=backP>0?(bH?'#EF4444':'#93C5FD'):'#334155';      // asiento izq → glúteo izq
-  var btcR=backP2>0?(btH?'#EF4444':'#93C5FD'):'#334155';     // asiento der → glúteo der
-  // Espalda izq colorea la mitad izquierda, espalda der colorea la mitad derecha
-  var bcR=bottomPR>0?(btHR?'#EF4444':'#93C5FD'):'#334155';
-  var blR=bottomPR>0?(btHR?'#FCA5A5':'#BFDBFE'):'#475569';
-  ['m-rhom-l','m-lat-l','m-erect-l'].forEach(function(id){document.getElementById(id).setAttribute('fill',bc)});
-  ['m-rhom-r','m-lat-r','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',bcR)});
-  document.getElementById('m-trap-l').setAttribute('fill',bl);
-  document.getElementById('m-trap-r').setAttribute('fill',blR);
-  document.getElementById('m-spine').setAttribute('fill',(btHL||btHR)?'#DC2626':'#1E40AF');
+function updateSensorUI(){
+  var lim=getPressureLimits();
+
+  var bH=backP>=lim.backWarn, b2H=backP2>=lim.backWarn;
+  var btHL=bottomPL>=lim.seatWarn, btHR=bottomPR>=lim.seatWarn;
+
+  function statusText(isHigh, val, warn, severe){
+    if(val>=severe) return '🔴 SEVERE > '+fmtKg(severe);
+    if(isHigh) return '⚠ HIGH > '+fmtKg(warn);
+    return lim.dynamic ? 'Normal < '+fmtKg(warn) : 'Normal';
+  }
+
+  function setCell(val,isHigh,warn,severe,valId,fillId,statusId,ledId){
+    var el=document.getElementById(valId);
+    var fill=document.getElementById(fillId);
+    var st=document.getElementById(statusId);
+    var led=document.getElementById(ledId);
+    if(!el||!fill||!st||!led) return;
+
+    el.textContent=fmtKg(val);
+    el.style.color=isHigh?'#EF4444':'#10B981';
+    fill.style.width=pctByLimit(val,warn)+'%';
+    fill.style.background=isHigh?'#EF4444':'#10B981';
+    st.textContent=statusText(isHigh,val,warn,severe);
+    st.className=isHigh?'status-hi':'status-ok';
+    led.className='fsr-led'+(isHigh?' on':'');
+  }
+
+  setCell(backP,bH,lim.backWarn,lim.backSevere,'backVal','backFill','backStatus','backLed');
+  setCell(backP2,b2H,lim.backWarn,lim.backSevere,'backVal2','backFill2','backStatus2','backLed2');
+  setCell(bottomPL,btHL,lim.seatWarn,lim.seatSevere,'bottomValL','bottomFillL','bottomStatusL','bottomLedL');
+  setCell(bottomPR,btHR,lim.seatWarn,lim.seatSevere,'bottomValR','bottomFillR','bottomStatusR','bottomLedR');
+
+  updateMuscles(bH,b2H,btHL,btHR);
+}
+
+function updateMuscles(bH,b2H,btHL,btHR){
+  function colorFromValue(v,hi){return v>0?(hi?'#EF4444':'#93C5FD'):'#334155';}
+  function softColorFromValue(v,hi){return v>0?(hi?'#FCA5A5':'#BFDBFE'):'#475569';}
+
+  var backLC=colorFromValue(backP,bH);
+  var backRC=colorFromValue(backP2,b2H);
+  var backLS=softColorFromValue(backP,bH);
+  var backRS=softColorFromValue(backP2,b2H);
+  var btcL=colorFromValue(bottomPL,btHL);
+  var btcR=colorFromValue(bottomPR,btHR);
+
+  ['m-rhom-l','m-lat-l','m-erect-l'].forEach(function(id){document.getElementById(id).setAttribute('fill',backLC)});
+  ['m-rhom-r','m-lat-r','m-erect-r'].forEach(function(id){document.getElementById(id).setAttribute('fill',backRC)});
+  document.getElementById('m-trap-l').setAttribute('fill',backLS);
+  document.getElementById('m-trap-r').setAttribute('fill',backRS);
+  document.getElementById('m-back-cell-l').setAttribute('fill',backLC);
+  document.getElementById('m-back-cell-r').setAttribute('fill',backRC);
+  document.getElementById('m-spine').setAttribute('fill',(bH||b2H)?'#DC2626':'#1E40AF');
+
   document.getElementById('g-left').setAttribute('fill',btcL);
   document.getElementById('g-right').setAttribute('fill',btcR);
-  document.getElementById('g-med-l').setAttribute('fill',backP>0?(bH?'#FCA5A5':'#BFDBFE'):'#475569');
-  document.getElementById('g-med-r').setAttribute('fill',backP2>0?(btH?'#FCA5A5':'#BFDBFE'):'#475569');
-  document.getElementById('g-sacrum').setAttribute('fill',(backP>0||backP2>0)?'#06B6D4':'#334155');
+  document.getElementById('g-med-l').setAttribute('fill',softColorFromValue(bottomPL,btHL));
+  document.getElementById('g-med-r').setAttribute('fill',softColorFromValue(bottomPR,btHR));
+  document.getElementById('g-sacrum').setAttribute('fill',(bottomPL>0||bottomPR>0)?'#06B6D4':'#334155');
 }
 
 function updateAngleUI(){
   var a=document.getElementById('gyroAngle');
   var pl=document.getElementById('posturaLabel');
-  if(a){a.textContent=connected?(gyroAngle.toFixed(1)+'°'):'---°';}
+  if(a){a.textContent=connected?(gyroAngle.toFixed(1)+'° Y'):'---°';}
   if(pl){
-    var sent=posturaSentado;
-    pl.textContent=connected?(sent?'SENTADO':'DE PIE'):'---';
-    pl.style.color=connected?(sent?'#10B981':'#3B82F6'):'#F1F5F9';
+    var label=connected?postureFromAngleAndMsg(deviceMessage):'---';
+    pl.textContent=label;
+    pl.style.color=connected?(label==='SENTADO'?'#10B981':label==='VERIFICAR APOYO'?'#94A3B8':'#F59E0B'):'#F1F5F9';
   }
+}
+
+function updateBatteryUI(){
+  var v=document.getElementById('batteryVal');
+  var f=document.getElementById('batteryFill');
+  var s=document.getElementById('batteryStatus');
+  if(!v||!f||!s) return;
+  if(!connected||batteryPct<=0){
+    v.textContent='---%';
+    v.style.color='#94A3B8';
+    f.style.width='0%';
+    f.style.background='#334155';
+    s.textContent='Sin lectura';
+    s.className='status-ok';
+    return;
+  }
+  var pct=Math.round(batteryPct);
+  var low=pct<20;
+  v.textContent=pct+'%';
+  v.style.color=low?'#EF4444':'#10B981';
+  f.style.width=pct+'%';
+  f.style.background=low?'#EF4444':'#10B981';
+  s.textContent=low?'⚠ Batería baja':'Batería normal';
+  s.className=low?'status-hi':'status-ok';
 }
 
 // ══════════════════════════════════════════════════════
 // PESO → ESP32
 // ══════════════════════════════════════════════════════
+function writeBLEText(data){
+  if(!(connMode==='bt'&&bleRxChar)) return Promise.reject(new Error('Bluetooth no conectado'));
+  var buf=new TextEncoder().encode(data);
+  return bleRxChar.writeValue(buf);
+}
+
+function getPatientNameForESP32(){
+  var name=getActivePatientName();
+  if(!name) name='Paciente';
+  return String(name).trim() || 'Paciente';
+}
+
 function enviarPeso(){
   var peso=parseFloat(document.getElementById('pesoInput').value);
   if(!peso||peso<=0){alert('Ingresa un peso válido');return;}
+
+  var paciente=getPatientNameForESP32();
+
   if(connMode==='bt'&&bleRxChar){
-    var data='PESO='+peso;
-    var buf=new ArrayBuffer(data.length);
-    var view=new Uint8Array(buf);
-    for(var i=0;i<data.length;i++) view[i]=data.charCodeAt(i);
-    bleRxChar.writeValue(buf).then(function(){alert('✓ Enviado: '+peso+' kg');}).catch(function(e){alert('Error: '+e.message);});
+    // Primero manda el nombre del paciente y luego el peso.
+    // El ESP32 debe recibir:
+    // PACIENTE=Nombre
+    // PESO=10
+    writeBLEText('PACIENTE='+paciente+'\n')
+      .then(function(){return new Promise(function(resolve){setTimeout(resolve,150);});})
+      .then(function(){return writeBLEText('PESO='+peso+'\n');})
+      .then(function(){alert('✓ Enviado: '+paciente+' / '+peso+' kg');})
+      .catch(function(e){alert('Error: '+e.message);});
   } else {
-    alert('Demo — peso registrado: '+peso+' kg');
+    devicePatientName=paciente;
+    alert('Demo — paciente registrado: '+paciente+' / '+peso+' kg');
   }
+
   // Guardar peso en el perfil del paciente
   if(activePatientId){
     var pts=getPatients();
     pts=pts.map(function(p){return p.id===activePatientId?Object.assign({},p,{peso:String(peso)}):p;});
     savePatients(pts);
+    refreshPatientBanner();
   }
+
+  resetFilterState();
+  updateSensorUI();
 }
 
 // ══════════════════════════════════════════════════════
-// HISTORIAL LOCAL + SHEETS
+// HISTORIAL LOCAL + GOOGLE SHEETS
 // ══════════════════════════════════════════════════════
 function pad(n){return n<10?'0'+n:''+n;}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function nowTime(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
-
-function getActivePatientName(){
-  if(!activePatientId) return '';
-  var p=getPatients().find(function(x){return x.id===activePatientId;});
-  return p?p.name:'';
-}
+function getActivePatientName(){if(!activePatientId) return '';var p=getPatients().find(function(x){return x.id===activePatientId;});return p?p.name:'';}
+function getActivePatientWeight(){if(!activePatientId) return 0;var p=getPatients().find(function(x){return x.id===activePatientId;});return p?parseFloat(p.peso||0)||0:0;}
 function getHistoryKey(){return 'pg_hist_'+(activePatientId||'global')+'_';}
-function getLocalDays(){
-  // Busca todas las keys de historial del paciente activo
-  var prefix=getHistoryKey();
-  var days=[];
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(k&&k.startsWith(prefix)) days.push(k.replace(prefix,''));
-  }
-  return days.sort().reverse();
-}
+function getLocalDays(){var prefix=getHistoryKey(),days=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix)) days.push(k.replace(prefix,''));}return days.sort().reverse();}
 function getLocalDay(day){try{return JSON.parse(localStorage.getItem(getHistoryKey()+day)||'[]');}catch(e){return[];}}
-function clearLocalHistory(){
-  var prefix=getHistoryKey();
-  var toDelete=[];
-  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix))toDelete.push(k);}
-  toDelete.forEach(function(k){localStorage.removeItem(k);});
-  selectedDay='';loadAnalytics();
+function clearLocalHistory(){var prefix=getHistoryKey(),toDelete=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix))toDelete.push(k);}toDelete.forEach(function(k){localStorage.removeItem(k);});selectedDay='';allDaysData={};allDaysList=[];loadAnalytics();}
+
+function buildReadingRow(){
+  return {
+    time: nowTime(),
+    back: backP,
+    back2: backP2,
+    bottomL: bottomPL,
+    bottomR: bottomPR,
+    bottom: (bottomPL+bottomPR)/2,
+    angulo: gyroAngle,
+    tiempoMin: postureTimeMin,
+    postura: postureFromAngleAndMsg(deviceMessage),
+    battery: batteryPct,
+    alerta: deviceAlert,
+    mensaje: deviceMessage,
+    motor: deviceMotor,
+    patientId: activePatientId||'',
+    patientName: devicePatientName || getActivePatientName() || 'Paciente',
+    pesoPaciente: getActivePatientWeight()
+  };
+}
+
+function saveLocalReading(row){
+  var day=todayStr();
+  var key=getHistoryKey()+day;
+  var arr;
+  try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}
+  arr.push(row);
+  if(arr.length>2000) arr=arr.slice(-2000);
+  localStorage.setItem(key,JSON.stringify(arr));
+  allDaysData[day]=arr;
+  if(allDaysList.indexOf(day)<0){allDaysList.unshift(day);allDaysList.sort().reverse();}
+}
+
+function cacheReadingForUI(row){
+  var day=todayStr();
+  if(!allDaysData[day]) allDaysData[day]=[];
+  allDaysData[day].push(row);
+  if(allDaysData[day].length>2000) allDaysData[day]=allDaysData[day].slice(-2000);
+  if(allDaysList.indexOf(day)<0){allDaysList.unshift(day);allDaysList.sort().reverse();}
 }
 
 function recordReading(){
   if(!connected) return;
-  var day=todayStr();
-  var key=getHistoryKey()+day;
-  var arr;try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}
-  arr.push({time:nowTime(),back:backP,bottomL:bottomPL,bottomR:bottomPR,bottom:(bottomPL+bottomPR)/2,angulo:gyroAngle,postura:posturaSentado?'SENTADO':'DE PIE',patientId:activePatientId||'',patientName:getActivePatientName()});
-  if(arr.length>2000) arr=arr.slice(-2000);
-  localStorage.setItem(key,JSON.stringify(arr));
-  if(scriptURL) saveToSheets();
+  var row=buildReadingRow();
+
+  // Primary mode: save in Google Sheets / Excel file "Datos".
+  // LocalStorage is used only if no Apps Script URL is configured.
+  if(scriptURL){
+    cacheReadingForUI(row);
+    saveToSheets(row);
+    return;
+  }
+
+  saveLocalReading(row);
+  updateSheetsBadge('off','configura URL');
 }
 
-function saveToSheets(){
+function saveToSheets(row){
   if(!scriptURL||!connected) return;
-  var url=scriptURL+'?action=write&back='+backP+'&bottomL='+bottomPL+'&bottomR='+bottomPR+'&angulo='+gyroAngle+'&postura='+(posturaSentado?'SENTADO':'DE PIE')+'&patient='+encodeURIComponent(getActivePatientName());
-  fetch(url).then(function(r){return r.json();}).then(function(d){if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}}).catch(function(){updateSheetsBadge('err','sin conexión');});
+  row=row||buildReadingRow();
+
+  sheetsJSONP({
+    action:'write',
+    paciente:row.patientName||'Paciente',
+    patient:row.patientName||'Paciente',
+    pesoPaciente:String(row.pesoPaciente||0),
+    peso:String(row.pesoPaciente||0),
+
+    // App/AppsScript names
+    seatL:String(row.bottomL||0),
+    seatR:String(row.bottomR||0),
+    backL:String(row.back||0),
+    backR:String(row.back2||0),
+
+    // Spanish aliases
+    izquierda:String(row.bottomL||0),
+    derecha:String(row.bottomR||0),
+    bottomL:String(row.bottomL||0),
+    bottomR:String(row.bottomR||0),
+    espalda:String(row.back||0),
+    espalda2:String(row.back2||0),
+    back:String(row.back||0),
+    back2:String(row.back2||0),
+
+    angulo:String(row.angulo||0),
+    angle:String(row.angulo||0),
+    tiempoMin:String(row.tiempoMin||0),
+    timeMin:String(row.tiempoMin||0),
+    postura:row.postura||'',
+    battery:String(row.battery||0),
+    bateria:String(row.battery||0),
+    alerta:String(row.alerta||0),
+    mensaje:row.mensaje||'',
+    motor:row.motor||''
+  }).then(function(d){
+    if(d.status==='ok'){sheetsOk=true;updateSheetsBadge('ok');}
+    else updateSheetsBadge('err',d.message||d.mensaje||'respuesta no OK');
+  }).catch(function(){
+    updateSheetsBadge('err','sin conexión');
+  });
 }
 
 function updateSheetsBadge(state,msg){
   var b=document.getElementById('sheetsBadge');
-  if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Google Sheets: conectado ✓';}
+  if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Guardando en Google Sheets: Datos ✓';}
   else if(state==='err'){b.className='sheets-badge err';b.textContent='🗂 Sheets: error — '+(msg||'');}
   else if(state==='checking'){b.className='sheets-badge off';b.textContent='🗂 Verificando Sheets...';}
-  else{b.className='sheets-badge off';b.textContent='💾 Historial local activo';}
+  else{b.className='sheets-badge off';b.textContent='⚠️ Configura URL de Google Sheets para guardar en Datos';}
 }
 
 function testSheetsConnection(){
-  var url=document.getElementById('scriptURL').value.trim();
+  var url=document.getElementById('scriptURL').value.trim() || getAuthBackendURL();
   if(!url){showSheetsTestResult('Pega la URL primero',false);return;}
-  showSheetsTestResult('<span class="spinner"></span>Probando...',null);
-  fetch(url+'?action=days').then(function(r){return r.json();}).then(function(d){
-    if(d.status==='ok'){showSheetsTestResult('✅ Conexión exitosa',true);scriptURL=url;updateSheetsBadge('ok');}
-    else showSheetsTestResult('❌ Respuesta inesperada',false);
-  }).catch(function(){showSheetsTestResult('❌ No se pudo conectar',false);});
+
+  setBackendURL(url);
+  showSheetsTestResult('<span class="spinner"></span>Probando conexión...',null);
+
+  // First use ping/test. Do not use setup first, because setup writes headers and can fail
+  // if Apps Script was not authorized yet.
+  sheetsJSONP({action:'ping'},url)
+    .then(function(d){
+      if(d.status==='ok'){
+        scriptURL=url;
+        showSheetsTestResult('✅ Conexión exitosa. Backend responde.',true);
+        updateSheetsBadge('ok');
+
+        // Run setup after ping, but do not break the app if setup fails.
+        sheetsJSONP({action:'setup'},url).catch(function(){});
+        return;
+      }
+
+      return sheetsJSONP({action:'test'},url).then(function(t){
+        if(t.status==='ok'){
+          scriptURL=url;
+          showSheetsTestResult('✅ Conexión exitosa. Backend responde.',true);
+          updateSheetsBadge('ok');
+        }else{
+          showSheetsTestResult('❌ Backend respondió, pero no OK: '+(t.message||''),false);
+        }
+      });
+    })
+    .catch(function(){
+      // fallback for backend without ping
+      sheetsJSONP({action:'test'},url)
+        .then(function(d){
+          if(d.status==='ok'){
+            scriptURL=url;
+            showSheetsTestResult('✅ Conexión exitosa. Backend responde.',true);
+            updateSheetsBadge('ok');
+          }else{
+            showSheetsTestResult('❌ Respuesta del backend: '+(d.message||'no OK'),false);
+          }
+        })
+        .catch(function(){
+          showSheetsTestResult('❌ No se pudo conectar. Abre la URL en browser con ?action=ping y revisa deployment: Web app / Anyone / Execute as Me / New version.',false);
+        });
+    });
 }
 function showSheetsTestResult(msg,ok){var el=document.getElementById('sheetsTestResult');el.style.display='block';el.style.color=ok===true?'#10B981':ok===false?'#EF4444':'#94A3B8';el.innerHTML=msg;}
-
 // ══════════════════════════════════════════════════════
-// ANALYTICS
+// ANALYTICS — LOCAL + SHEETS + PERIOD CHART
 // ══════════════════════════════════════════════════════
-function fetchDays(){
-  if(scriptURL) return fetch(scriptURL+'?action=days').then(function(r){return r.json();});
-  return Promise.resolve({status:'ok',days:getLocalDays()});
-}
-function fetchDay(day){
-  if(scriptURL) return fetch(scriptURL+'?action=read&day='+day).then(function(r){return r.json();});
-  return Promise.resolve({status:'ok',rows:getLocalDay(day)});
-}
+function normalizeDateValue(v){if(!v) return todayStr();var s=String(v).trim();if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);var m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m){return m[3]+'-'+pad(parseInt(m[2]))+'-'+pad(parseInt(m[1]));}var d=new Date(s);if(!isNaN(d.getTime())) return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());return todayStr();}
+function normalizeTimeValue(v){if(!v) return '00:00:00';var s=String(v).trim();var m=s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(m) return pad(parseInt(m[1]))+':'+m[2]+':'+(m[3]||'00');var d=new Date(s);if(!isNaN(d.getTime())) return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());return s;}
+function numField(row,names){for(var i=0;i<names.length;i++){if(row[names[i]]!=null && row[names[i]]!=='') return parseFloat(row[names[i]])||0;}return 0;}
+function normalizeSheetRow(row,patientName){var time=normalizeTimeValue(row.time||row.hora||row.Hora||row.hour||row.Timestamp||row.timestamp);var b1=numField(row,['back','espalda','Espalda','B1','b1','espalda1','Espalda1']);var b2=numField(row,['back2','espalda2','Espalda2','B2','b2']);var l=numField(row,['bottomL','left','izquierda','Izquierda','L','asientoIzq','asiento_izq']);var r=numField(row,['bottomR','right','derecha','Derecha','R','asientoDer','asiento_der']);return {time:time,back:b1,back2:b2,bottomL:l,bottomR:r,bottom:(l+r)/2,angulo:numField(row,['angulo','angle','Angulo','Ángulo']),postura:row.postura||'',battery:numField(row,['battery','bateria','Bateria','BAT']),patientName:patientName};}
+function fetchAllDays(){
+  var localDays=getLocalDays();
+  localDays.forEach(function(d){allDaysData[d]=getLocalDay(d);});
+  allDaysList=localDays.slice();
 
-function loadAnalytics(){
-  document.getElementById('refreshBtn').innerHTML='<span class="spinner"></span>Cargando...';
-  fetchDays().then(function(data){
-    var days=data.days||[];
-    renderDaySelector(days);
-    if((!selectedDay||days.indexOf(selectedDay)<0)&&days.length>0) selectedDay=days[0];
-    if(selectedDay) loadDayData(selectedDay);
-    else{document.getElementById('refreshBtn').textContent='🔄 Actualizar';document.getElementById('historyList').innerHTML='<div class="empty-state">No hay datos. Conecta y usa el modo demo para empezar.</div>';renderStats([]);renderChart([]);renderInsights([]);}
-  }).catch(function(){document.getElementById('refreshBtn').textContent='🔄 Actualizar';document.getElementById('historyList').innerHTML='<div class="empty-state" style="color:#EF4444">❌ Error conectando</div>';});
-}
+  if(!scriptURL) return Promise.resolve();
 
-function renderDaySelector(days){
-  var sel=document.getElementById('daySelector');
-  if(!days.length){sel.innerHTML='<span style="font-size:12px;color:#475569">Sin días registrados</span>';return;}
-  sel.innerHTML='';
-  days.forEach(function(d){
-    var chip=document.createElement('button');
-    chip.className='day-chip'+(d===selectedDay?' active':'');
-    chip.textContent=formatDayLabel(d);
-    chip.onclick=function(){selectedDay=d;document.querySelectorAll('.day-chip').forEach(function(c){c.classList.remove('active')});chip.classList.add('active');loadDayData(d);};
-    sel.appendChild(chip);
-  });
-}
-function formatDayLabel(s){var p=s.split('-');if(p.length<3)return s;var m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return p[2]+' '+m[parseInt(p[1])-1];}
+  var patientName=getActivePatientName();
 
-function loadDayData(day){
-  document.getElementById('historyTitle').textContent='Historial — '+day;
-  document.getElementById('historyList').innerHTML='<div class="empty-state"><span class="spinner"></span>Cargando...</div>';
-  fetchDay(day).then(function(data){
-    document.getElementById('refreshBtn').textContent='🔄 Actualizar';
-    renderHistory(data.rows||[]);renderStats(data.rows||[]);renderChart(data.rows||[]);renderInsights(data.rows||[]);
-  }).catch(function(){document.getElementById('refreshBtn').textContent='🔄 Actualizar';document.getElementById('historyList').innerHTML='<div class="empty-state" style="color:#EF4444">❌ Error</div>';});
+  return sheetsJSONP({action:'read',paciente:patientName||''})
+    .then(function(d){
+      if(d.status==='ok'&&d.rows&&d.rows.length){
+        d.rows.forEach(function(row){
+          var nr=normalizeSheetRow(row,patientName);
+          var fecha=normalizeDateValue(row.fecha||row.Fecha||row.date||row.Date||row.timestamp||row.Timestamp);
+          if(!allDaysData[fecha]) allDaysData[fecha]=[];
+          allDaysData[fecha].push(nr);
+          if(allDaysList.indexOf(fecha)<0) allDaysList.push(fecha);
+        });
+        allDaysList.sort().reverse();
+      }
+      return Promise.resolve();
+    })
+    .catch(function(){
+      return Promise.resolve();
+    });
 }
-
-function renderHistory(rows){
-  var list=document.getElementById('historyList');
-  if(!rows.length){list.innerHTML='<div class="empty-state">Sin lecturas para este día</div>';return;}
-  var recent=rows.slice(-30).reverse();list.innerHTML='';
-  recent.forEach(function(r){
-    var isHigh=r.back>=pressureThreshold||(r.bottomL||0)>=pressureThreshold||(r.bottomR||0)>=pressureThreshold;
-    var div=document.createElement('div');div.className='history-item '+(isHigh?'hi':'ok');
-    div.innerHTML='<div><div class="history-time">'+r.time+'</div></div>'+
-      '<div class="history-vals"><span style="color:#93C5FD">E:'+r.back+'</span> <span style="color:#06B6D4">AI:'+(r.bottomL||r.bottom||0)+'</span> <span style="color:#818CF8">AD:'+(r.bottomR||0)+'</span></div>'+'<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(r.postura||'')+'  '+(r.angulo!=null?r.angulo+'°':'')+' </div>'+
-      '<div style="font-size:10px">'+(isHigh?'🔴':'✅')+'</div>';
-    list.appendChild(div);
-  });
-}
-
-function renderStats(rows){
-  if(!rows.length){document.getElementById('stat-posture').textContent='--%';document.getElementById('stat-back').textContent='---';document.getElementById('stat-bottom').textContent='---';return;}
-  var bA=Math.round(rows.reduce(function(s,r){return s+r.back},0)/rows.length);
-  var btA=Math.round(rows.reduce(function(s,r){return s+((r.bottomL||0)+(r.bottomR||r.bottom||0))/2},0)/rows.length);
-  var g=rows.filter(function(r){return r.back<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||r.bottom||0)<pressureThreshold}).length;
-  var gp=Math.round(g/rows.length*100);
-  document.getElementById('stat-posture').textContent=gp+'%';
-  document.getElementById('stat-posture').style.color=gp>=60?'#10B981':'#EF4444';
-  document.getElementById('stat-back').textContent=bA;
-  document.getElementById('stat-back').style.color=bA>=pressureThreshold?'#EF4444':'#93C5FD';
-  document.getElementById('stat-bottom').textContent=btA;
-  document.getElementById('stat-bottom').style.color=btA>=pressureThreshold?'#EF4444':'#06B6D4';
-}
-
-function renderChart(rows){
-  var el=document.getElementById('chartBars');
-  if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos</div>';return;}
-  var g={};
-  rows.forEach(function(r){var h=r.time?r.time.split(':')[0]+'h':'?';if(!g[h]){g[h]={bs:0,bls:0,brs:0,c:0};}g[h].bs+=r.back;g[h].bls+=(r.bottomL||0);g[h].brs+=(r.bottomR||r.bottom||0);g[h].c++;});
-  el.innerHTML='';
-  Object.keys(g).slice(-8).forEach(function(k){
-    var bA=Math.round(g[k].bs/g[k].c),blA=Math.round(g[k].bls/g[k].c),brA=Math.round(g[k].brs/g[k].c);
-    var bh=Math.max(4,Math.round(bA/1023*80)),blh=Math.max(4,Math.round(blA/1023*80)),brh=Math.max(4,Math.round(brA/1023*80));
-    el.innerHTML+='<div class="bar-group"><div class="bar-wrap">'+
-      '<div class="bar" style="height:'+bh+'px;background:'+(bA>=pressureThreshold?'#EF4444':'#10B981')+'"></div>'+
-      '<div class="bar" style="height:'+blh+'px;background:'+(blA>=pressureThreshold?'#DC2626':'#06B6D4')+'"></div>'+
-      '<div class="bar" style="height:'+brh+'px;background:'+(brA>=pressureThreshold?'#DC2626':'#818CF8')+'"></div>'+
-      '</div><div class="bar-lbl">'+k+'</div></div>';
-  });
-}
-
-function renderInsights(rows){
-  var el=document.getElementById('insights');
-  if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>';return;}
-  var bA=Math.round(rows.reduce(function(s,r){return s+r.back},0)/rows.length);
-  var blA=Math.round(rows.reduce(function(s,r){return s+(r.bottomL||0)},0)/rows.length);
-  var brA=Math.round(rows.reduce(function(s,r){return s+(r.bottomR||r.bottom||0)},0)/rows.length);
-  var g=rows.filter(function(r){return r.back<pressureThreshold&&(r.bottomL||0)<pressureThreshold&&(r.bottomR||r.bottom||0)<pressureThreshold}).length;
-  var gp=Math.round(g/rows.length*100);
-  var diff=Math.abs(blA-brA);
-  function tip(i,t){return'<div class="tip-row"><span class="tip-icon">'+i+'</span><span class="tip-text">'+t+'</span></div>';}
-  var html='';
-  html+=tip(gp>=70?'✅':'⚠️',gp>=70?'Buena postura el '+gp+'% del tiempo. ¡Excelente!':'Postura correcta solo el '+gp+'%. Descansa cada 30 min.');
-  html+=tip(bA<pressureThreshold?'✅':'🔴',bA<pressureThreshold?'Presión en espalda normal.':'Presión alta en espalda. Ajusta soporte lumbar.');
-  html+=tip(diff<100?'✅':'⚠️',diff<100?'Distribución del peso simétrica entre glúteos.':'Desequilibrio entre glúteo izquierdo ('+blA+') y derecho ('+brA+'). Intenta sentarte más centrado.');
-  el.innerHTML=html;
-}
+function loadAnalytics(){document.getElementById('refreshBtn').innerHTML='<span class="spinner"></span>Cargando...';allDaysData={};allDaysList=[];fetchAllDays().then(function(){document.getElementById('refreshBtn').textContent='🔄 Actualizar';renderDaySelector(allDaysList);if((!selectedDay||allDaysList.indexOf(selectedDay)<0)&&allDaysList.length>0) selectedDay=allDaysList[0];drawChart();if(selectedDay){var rows=allDaysData[selectedDay]||[];document.getElementById('historyTitle').textContent='Lecturas — '+selectedDay;renderHistory(rows);renderStats(rows);renderInsights(rows);}else{document.getElementById('historyList').innerHTML='<div class="empty-state">No hay datos. Conecta el ESP32 o usa modo demo.</div>';renderStats([]);renderInsights([]);}}).catch(function(){document.getElementById('refreshBtn').textContent='🔄 Actualizar';document.getElementById('historyList').innerHTML='<div class="empty-state" style="color:#EF4444">❌ Error cargando analytics</div>';});}
+function setPeriod(p,el){currentPeriod=p;document.querySelectorAll('.period-tab').forEach(function(t){t.classList.remove('active')});if(el) el.classList.add('active');var picker=document.getElementById('dayPickerWrap');if(picker) picker.style.display=p==='day'?'block':'none';drawChart();}
+function getLast7Days(){var arr=[];var now=new Date();for(var i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);arr.push(d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()));}return arr;}
+function avgRows(rows,key){if(!rows||!rows.length)return 0;return roundKg(rows.reduce(function(s,r){return s+(parseFloat(r[key])||0);},0)/rows.length);}
+function avgBack(rows){if(!rows||!rows.length)return 0;return roundKg(rows.reduce(function(s,r){return s+((parseFloat(r.back)||0)+(parseFloat(r.back2)||0))/2;},0)/rows.length);}
+function getChartData(){if(currentPeriod==='day'){var rows=allDaysData[selectedDay]||[];var g={};rows.forEach(function(r){var h=r.time?String(r.time).split(':')[0]:'00';if(!g[h])g[h]={back:0,back2:0,bottomL:0,bottomR:0,c:0};g[h].back+=(r.back||0);g[h].back2+=(r.back2||0);g[h].bottomL+=(r.bottomL||0);g[h].bottomR+=(r.bottomR||0);g[h].c++;});return Object.keys(g).sort(function(a,b){return parseInt(a)-parseInt(b);}).map(function(k){var x=g[k];return{label:k+'h',back:roundKg(x.back/x.c),back2:roundKg(x.back2/x.c),bottomL:roundKg(x.bottomL/x.c),bottomR:roundKg(x.bottomR/x.c)};});}if(currentPeriod==='week'){return getLast7Days().map(function(d){var rows=allDaysData[d]||[];if(!rows.length)return{label:formatDayLabel(d),back:0,back2:0,bottomL:0,bottomR:0,noData:true};return{label:formatDayLabel(d),back:avgRows(rows,'back'),back2:avgRows(rows,'back2'),bottomL:avgRows(rows,'bottomL'),bottomR:avgRows(rows,'bottomR')};});}if(currentPeriod==='month'){var now=new Date(),year=now.getFullYear(),month=now.getMonth();var weeks={W1:[],W2:[],W3:[],W4:[],W5:[]};allDaysList.forEach(function(d){var dd=new Date(d+'T00:00:00');if(dd.getFullYear()!==year||dd.getMonth()!==month)return;var wk='W'+Math.ceil(dd.getDate()/7);weeks[wk]=(weeks[wk]||[]).concat(allDaysData[d]||[]);});return ['W1','W2','W3','W4','W5'].map(function(w){var rows=weeks[w]||[];if(!rows.length)return{label:w,back:0,back2:0,bottomL:0,bottomR:0,noData:true};return{label:w,back:avgRows(rows,'back'),back2:avgRows(rows,'back2'),bottomL:avgRows(rows,'bottomL'),bottomR:avgRows(rows,'bottomR')};});}var months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];var yearNow=new Date().getFullYear();var buckets={};months.forEach(function(m,i){buckets[i]=[];});allDaysList.forEach(function(d){var dd=new Date(d+'T00:00:00');if(dd.getFullYear()!==yearNow)return;buckets[dd.getMonth()]=buckets[dd.getMonth()].concat(allDaysData[d]||[]);});return months.map(function(m,i){var rows=buckets[i]||[];if(!rows.length)return{label:m,back:0,back2:0,bottomL:0,bottomR:0,noData:true};return{label:m,back:avgRows(rows,'back'),back2:avgRows(rows,'back2'),bottomL:avgRows(rows,'bottomL'),bottomR:avgRows(rows,'bottomR')};});}
+function hexToRgba(hex,a){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+function drawChart(){var canvas=document.getElementById('mainChart');if(!canvas)return;var rect=canvas.getBoundingClientRect();var ratio=window.devicePixelRatio||1;var W=Math.max(300,rect.width||360),H=180;canvas.width=W*ratio;canvas.height=H*ratio;canvas.style.height=H+'px';var ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,W,H);var data=getChartData();var PAD_L=34,PAD_R=10,PAD_T=12,PAD_B=24,cW=W-PAD_L-PAD_R,cH=H-PAD_T-PAD_B;var lim=getPressureLimits();var chartThreshold=Math.max(lim.backWarn,lim.seatWarn);var maxVal=Math.max(chartThreshold*1.15,0.500);data.forEach(function(d){maxVal=Math.max(maxVal,d.back||0,d.back2||0,d.bottomL||0,d.bottomR||0);});maxVal=Math.ceil(maxVal*2)/2;if(maxVal<0.500)maxVal=0.500;function yOf(v){return PAD_T+cH*(1-Math.min(v,maxVal)/maxVal);}function xOf(i){return PAD_L+(data.length===1?cW/2:i*(cW/(data.length>1?data.length-1:1)));}ctx.font='9px sans-serif';ctx.textAlign='right';ctx.lineWidth=1;[0,0.25,0.5,0.75,1].forEach(function(fr){var val=Math.round(maxVal*fr);var y=yOf(val);ctx.beginPath();ctx.strokeStyle='#243247';ctx.moveTo(PAD_L,y);ctx.lineTo(W-PAD_R,y);ctx.stroke();ctx.fillStyle='#64748B';ctx.fillText(roundKg(val).toFixed(3),PAD_L-5,y+3);});var thY=yOf(chartThreshold);ctx.beginPath();ctx.strokeStyle='rgba(239,68,68,.45)';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.moveTo(PAD_L,thY);ctx.lineTo(W-PAD_R,thY);ctx.stroke();ctx.setLineDash([]);if(!data.length){ctx.fillStyle='#475569';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('Sin datos para este período',W/2,H/2);return;}function drawSeries(key,color,alpha){ctx.beginPath();data.forEach(function(d,i){var x=xOf(i),y=yOf(d[key]||0);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.lineTo(xOf(data.length-1),PAD_T+cH);ctx.lineTo(xOf(0),PAD_T+cH);ctx.closePath();ctx.fillStyle=hexToRgba(color,alpha);ctx.fill();ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';data.forEach(function(d,i){var x=xOf(i),y=yOf(d[key]||0);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();data.forEach(function(d,i){if(d.noData)return;ctx.beginPath();ctx.arc(xOf(i),yOf(d[key]||0),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});}drawSeries('back','#10B981',0.11);drawSeries('back2','#F59E0B',0.10);drawSeries('bottomL','#06B6D4',0.09);drawSeries('bottomR','#818CF8',0.09);ctx.fillStyle='#64748B';ctx.font='9px sans-serif';ctx.textAlign='center';var skip=Math.max(1,Math.floor(data.length/7));data.forEach(function(d,i){if(i%skip===0||i===data.length-1)ctx.fillText(d.label,xOf(i),H-8);});canvas._chartData=data;canvas._chartPad={L:PAD_L,R:PAD_R,T:PAD_T,B:PAD_B,W:cW,H:cH,step:cW/(data.length>1?data.length-1:1)};}
+function renderDaySelector(days){var sel=document.getElementById('daySelector');if(!sel) return;if(!days.length){sel.innerHTML='<span style="font-size:12px;color:#475569">Sin días registrados</span>';return;}sel.innerHTML='';days.forEach(function(d){var chip=document.createElement('button');chip.className='day-chip'+(d===selectedDay?' active':'');chip.textContent=formatDayLabel(d);chip.onclick=function(){selectedDay=d;document.querySelectorAll('.day-chip').forEach(function(c){c.classList.remove('active')});chip.classList.add('active');drawChart();var rows=allDaysData[d]||[];document.getElementById('historyTitle').textContent='Lecturas — '+d;renderHistory(rows);renderStats(rows);renderInsights(rows);};sel.appendChild(chip);});}
+function formatDayLabel(s){var p=String(s).split('-');if(p.length<3)return s;var m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return p[2]+' '+m[parseInt(p[1])-1];}
+function renderHistory(rows){var list=document.getElementById('historyList');if(!rows.length){list.innerHTML='<div class="empty-state">Sin lecturas para este día</div>';return;}var recent=rows.slice(-25).reverse();list.innerHTML='';recent.forEach(function(r){var isHigh=anyHighByLimits(r);var div=document.createElement('div');div.className='history-item '+(isHigh?'hi':'ok');div.innerHTML='<div><div class="history-time">'+(r.time||'--:--')+'</div></div>'+'<div class="history-vals"><span style="color:#93C5FD">EI:'+fmtKg(r.back||0)+'</span> <span style="color:#F59E0B">ED:'+fmtKg(r.back2||0)+'</span> <span style="color:#06B6D4">AI:'+fmtKg(r.bottomL||0)+'</span> <span style="color:#818CF8">AD:'+fmtKg(r.bottomR||0)+'</span></div>'+'<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(r.postura||'')+' '+(r.angulo!=null?(r.angulo+'°'):'')+' '+(r.battery?('🔋 '+Math.round(r.battery)+'%'):'')+'</div>'+'<div style="font-size:10px">'+(isHigh?'🔴':'✅')+'</div>';list.appendChild(div);});}
+function renderStats(rows){if(!rows.length){document.getElementById('stat-posture').textContent='--%';document.getElementById('stat-back').textContent='---';document.getElementById('stat-bottom').textContent='---';var mb=document.getElementById('metric-back-diff'),ms=document.getElementById('metric-seat-diff');if(mb)mb.textContent='---';if(ms)ms.textContent='---';return;}var bA=avgBack(rows);var btA=roundKg(rows.reduce(function(s,r){return s+((r.bottomL||0)+(r.bottomR||0))/2},0)/rows.length);var b1A=avgRows(rows,'back'),b2A=avgRows(rows,'back2'),lA=avgRows(rows,'bottomL'),rA=avgRows(rows,'bottomR');var g=rows.filter(function(r){return !anyHighByLimits(r);}).length;var gp=Math.round(g/rows.length*100);document.getElementById('stat-posture').textContent=gp+'%';document.getElementById('stat-posture').style.color=gp>=60?'#10B981':'#EF4444';document.getElementById('stat-back').textContent=fmtKg(bA);var lim=getPressureLimits();document.getElementById('stat-back').style.color=bA>=lim.backWarn?'#EF4444':'#93C5FD';document.getElementById('stat-bottom').textContent=fmtKg(btA);document.getElementById('stat-bottom').style.color=btA>=lim.seatWarn?'#EF4444':'#06B6D4';var mb=document.getElementById('metric-back-diff'),ms=document.getElementById('metric-seat-diff');if(mb)mb.textContent=fmtKg(Math.abs(b1A-b2A));if(ms)ms.textContent=fmtKg(Math.abs(lA-rA));}
+function renderInsights(rows){var el=document.getElementById('insights');if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:10px 0">Sin datos para analizar</div>';return;}var b1A=avgRows(rows,'back'),b2A=avgRows(rows,'back2'),lA=avgRows(rows,'bottomL'),rA=avgRows(rows,'bottomR');var g=rows.filter(function(r){return !anyHighByLimits(r);}).length;var gp=Math.round(g/rows.length*100);var diffSeat=Math.abs(lA-rA),diffBack=Math.abs(b1A-b2A);function tip(i,t){return'<div class="tip-row"><span class="tip-icon">'+i+'</span><span class="tip-text">'+t+'</span></div>';}var html='';html+=tip(gp>=70?'✅':'⚠️',gp>=70?'Buena postura el '+gp+'% del tiempo.':'Postura correcta solo el '+gp+'%. Conviene revisar apoyo y descansos.');html+=tip(diffBack<0.120?'✅':'⚠️',diffBack<0.120?'Espalda equilibrada entre izquierda y derecha.':'Diferencia en espalda: izquierda '+fmtKg(b1A)+' vs derecha '+fmtKg(b2A)+'. Revisa alineación del tronco.');html+=tip(diffSeat<0.120?'✅':'⚠️',diffSeat<0.120?'Peso del asiento bastante simétrico.':'Diferencia en glúteos/isquiones: izq '+fmtKg(lA)+' vs der '+fmtKg(rA)+'. Intenta centrar el apoyo.');var lim=getPressureLimits();html+=tip((b1A<lim.backWarn&&b2A<lim.backWarn&&lA<lim.seatWarn&&rA<lim.seatWarn)?'✅':'🔴','Umbral dinámico: espalda '+fmtKg(lim.backWarn)+' / asiento '+fmtKg(lim.seatWarn)+' según peso del paciente.');el.innerHTML=html;}
+function attachChartTooltip(){var canvas=document.getElementById('mainChart');if(!canvas||canvas._tooltipReady)return;canvas._tooltipReady=true;function handle(e){if(!canvas._chartData||!canvas._chartData.length)return;var rect=canvas.getBoundingClientRect();var x=((e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX)-rect.left;var p=canvas._chartPad;if(!p)return;var idx=Math.round((x-p.L)/p.step);idx=Math.max(0,Math.min(idx,canvas._chartData.length-1));var d=canvas._chartData[idx];var tip=document.getElementById('chartTooltip');tip.innerHTML='<b>'+d.label+'</b><br><span style="color:#10B981">■</span> EI:'+fmtKg(d.back||0)+' &nbsp;<span style="color:#F59E0B">■</span> ED:'+fmtKg(d.back2||0)+'<br><span style="color:#06B6D4">■</span> AI:'+fmtKg(d.bottomL||0)+' &nbsp;<span style="color:#818CF8">■</span> AD:'+fmtKg(d.bottomR||0);tip.style.left=Math.min(x,rect.width-170)+'px';tip.style.top='6px';tip.style.display='block';setTimeout(function(){tip.style.display='none';},2600);}canvas.addEventListener('click',handle);canvas.addEventListener('touchstart',function(e){e.preventDefault();handle(e);},{passive:false});}
 
 // ══════════════════════════════════════════════════════
 // SETTINGS
 // ══════════════════════════════════════════════════════
 function toggleBuzzer(){document.getElementById('buzzerSwitch').classList.toggle('on');}
-function onThreshInput(){var v=parseInt(document.getElementById('pressureThresh').value)||700;document.getElementById('curThresh').textContent=v;document.getElementById('threshLabel').textContent=v>=700?'Strict':v>=400?'Moderate':'Relaxed';}
+function onThreshInput(){var v=normalizeThreshold(document.getElementById('buzzerThresh').value);pressureThreshold=v;document.getElementById('buzzerThresh').value=v.toFixed(3);}
 function saveSettings(){
-  var v=parseInt(document.getElementById('pressureThresh').value)||700;
+  var v=normalizeThreshold(document.getElementById('buzzerThresh').value);
   var url=document.getElementById('scriptURL').value.trim();
-  pressureThreshold=Math.max(0,Math.min(1023,v));
+  pressureThreshold=v;
   scriptURL=url;
-  localStorage.setItem('threshold',pressureThreshold);
+  localStorage.setItem('threshold',pressureThreshold.toFixed(3));
   // Guardar sheets URL en el perfil del paciente activo
   if(activePatientId&&url){
     var pts=getPatients();
@@ -1055,7 +1618,7 @@ function saveSettings(){
 // ══════════════════════════════════════════════════════
 window.onload=function(){
   activePatientId=localStorage.getItem('activePatientId')||null;
-  pressureThreshold=parseInt(localStorage.getItem('threshold')||'700');
+  pressureThreshold=normalizeThreshold(localStorage.getItem('threshold')||'0.700');
   if(activePatientId){
     var pts=getPatients();
     var p=pts.find(function(x){return x.id===activePatientId;});
@@ -1065,6 +1628,11 @@ window.onload=function(){
   document.getElementById('authScreen').style.display='flex';
   document.getElementById('app').style.display='none';
 };
+document.addEventListener('DOMContentLoaded',function(){attachChartTooltip();});
+window.addEventListener('resize',function(){drawChart();});
+
+initBackendFields();
 </script>
 </body>
 </html>
+
