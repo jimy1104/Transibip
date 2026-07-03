@@ -294,7 +294,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 
     <!-- Sensor espalda derecho / nuevo -->
     <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor espalda DER (celda nueva)</span><div class="fsr-led" id="backLed2"></div></div>
+      <div class="fsr-header"><span class="fsr-title">Sensor espalda DER (celda)</span><div class="fsr-led" id="backLed2"></div></div>
       <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="backVal2" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
       <div class="gauge-track"><div class="gauge-fill" id="backFill2" style="width:0%;background:#10B981"></div></div>
       <div id="backStatus2" class="status-ok">Normal</div>
@@ -302,7 +302,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 
     <!-- Sensor asiento izquierdo -->
     <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor asiento IZQ (celda 20kg)</span><div class="fsr-led" id="bottomLedL"></div></div>
+      <div class="fsr-header"><span class="fsr-title">Sensor asiento IZQ (celda)</span><div class="fsr-led" id="bottomLedL"></div></div>
       <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="bottomValL" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
       <div class="gauge-track"><div class="gauge-fill" id="bottomFillL" style="width:0%;background:#10B981"></div></div>
       <div id="bottomStatusL" class="status-ok">Normal</div>
@@ -310,7 +310,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 
     <!-- Sensor asiento derecho -->
     <div class="fsr-card">
-      <div class="fsr-header"><span class="fsr-title">Sensor asiento DER (celda 20kg)</span><div class="fsr-led" id="bottomLedR"></div></div>
+      <div class="fsr-header"><span class="fsr-title">Sensor asiento DER (celda)</span><div class="fsr-led" id="bottomLedR"></div></div>
       <div class="row"><span style="font-size:12px;color:#94A3B8">Pressure</span><span id="bottomValR" style="font-size:20px;font-weight:700;color:#10B981;font-family:monospace">0</span></div>
       <div class="gauge-track"><div class="gauge-fill" id="bottomFillR" style="width:0%;background:#10B981"></div></div>
       <div id="bottomStatusR" class="status-ok">Normal</div>
@@ -474,7 +474,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
         <tr><td style="color:#94A3B8;padding:5px 0">Gyroscope</td><td style="text-align:right;color:#F1F5F9;font-weight:600">MPU6050 (ángulo)</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Battery</td><td style="text-align:right;color:#F1F5F9;font-weight:600">ADC ESP32 / %</td></tr>
         <tr><td style="color:#94A3B8;padding:5px 0">Storage</td><td style="text-align:right;color:#10B981;font-weight:600">Google Sheets: Datos ☁️</td></tr>
-<tr><td style="color:#94A3B8;padding:5px 0">Cell order</td><td style="text-align:right;color:#10B981;font-weight:600">BLE 1-2 = Seat / BLE 3-4 = Back</td></tr>
+<tr><td style="color:#94A3B8;padding:5px 0">Cell order</td><td style="text-align:right;color:#10B981;font-weight:600">BLE 1-2 = Back / BLE 3-4 = Seat</td></tr>
       </table>
     </div>
 
@@ -1074,11 +1074,11 @@ function connectBLE(){
 }
 
 // ESP32 CSV NUEVO:
-// ESP32 manda:
-// SeatL,SeatR,BackB1,BackB2,Y,TiempoMin,BAT,ALERTA,MENSAJE,MOTOR,PACIENTE
-//
-// Por eso la app ahora muestra/guarda:
-// Asiento Izq, Asiento Der, Espalda Izq, Espalda Der, Y, Tiempo, BAT, Alerta, Mensaje, Motor, Paciente.
+// ESP32 manda por cableado actual:
+// p[0],p[1] = celdas físicas del ASIENTO, pero en la app deben verse como ESPALDA.
+// p[2],p[3] = celdas físicas de la ESPALDA, pero en la app deben verse como ASIENTO.
+// Orden final visible/guardado:
+// Espalda Izq, Espalda Der, Asiento Izq, Asiento Der, Y, Tiempo, BAT, Alerta, Mensaje, Motor, Paciente.
 function onBleData(e){
   var txt=new TextDecoder().decode(e.target.value).trim();
   if(!txt) return;
@@ -1092,14 +1092,14 @@ function onBleData(e){
     var p=line.split(',');
     if(p.length<2) continue;
 
-    // Formato nuevo del ESP32:
-    // p[0],p[1] = ASIENTO L/R
-    // p[2],p[3] = ESPALDA B1/B2
+    // Formato nuevo del ESP32 con mapeo corregido para tu montaje físico:
+    // p[0],p[1] entran desde las celdas de asiento, pero se muestran como ESPALDA L/R.
+    // p[2],p[3] entran desde las celdas de espalda, pero se muestran como ASIENTO L/R.
     if(p.length>=10){
-      bottomPL   = filterSensorKg('bottomPL', p[0]);
-      bottomPR   = filterSensorKg('bottomPR', p[1]);
-      backP      = filterSensorKg('backP', p[2]);
-      backP2     = filterSensorKg('backP2', p[3]);
+      backP      = filterSensorKg('backP', p[0]);
+      backP2     = filterSensorKg('backP2', p[1]);
+      bottomPL   = filterSensorKg('bottomPL', p[2]);
+      bottomPR   = filterSensorKg('bottomPR', p[3]);
 
       gyroAngle  = parseFloat(p[4])||0;
       postureTimeMin = parseFloat(p[5])||0;
