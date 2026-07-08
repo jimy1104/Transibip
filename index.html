@@ -445,7 +445,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="card-title">🗂 Google Sheets</div>
       <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;line-height:1.6">URL del Apps Script. Se usa para login, registro y guardar datos en Sheets.</div>
       <div class="field-label">URL del Apps Script</div>
-      <input class="input-field" id="scriptURL" placeholder="https://script.google.com/macros/s/..." style="font-size:12px">
+      <input class="input-field" id="scriptURL" placeholder="https://script.google.com/macros/s/..." value="https://script.google.com/macros/s/AKfycbwU1R2duPOB9EjQwQXPt2zypfKB11J3Do5uMHQn0bXWI-aTUKhGNx0hgCVWTQoXIFyoRw/exec" style="font-size:12px">
       <div id="sheetsTestResult" style="font-size:11px;margin-bottom:6px;display:none"></div>
       <button class="btn btn-secondary" onclick="testSheetsConnection()" style="margin-top:4px">🔌 Probar conexión</button>
     </div>
@@ -515,7 +515,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="field-label">Contraseña</div>
       <input class="input-field" type="password" id="loginPass" placeholder="Tu contraseña">
       <div class="field-label">URL Google Sheets / Apps Script *</div>
-      <input class="input-field" id="loginSheets" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px">
+      <input class="input-field" id="loginSheets" placeholder="https://script.google.com/macros/s/.../exec" value="https://script.google.com/macros/s/AKfycbwU1R2duPOB9EjQwQXPt2zypfKB11J3Do5uMHQn0bXWI-aTUKhGNx0hgCVWTQoXIFyoRw/exec" style="font-size:12px">
       <button class="btn btn-primary" onclick="doLogin()" style="margin-top:4px">Entrar</button>
     </div>
 
@@ -529,7 +529,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
       <div class="field-label">Contraseña (mín. 4 caracteres) *</div>
       <input class="input-field" type="password" id="regPass" placeholder="Crea tu contraseña">
       <div class="field-label">URL Google Sheets (Apps Script)</div>
-      <input class="input-field" id="regSheets" placeholder="https://script.google.com/..." style="font-size:12px">
+      <input class="input-field" id="regSheets" placeholder="https://script.google.com/..." value="https://script.google.com/macros/s/AKfycbwU1R2duPOB9EjQwQXPt2zypfKB11J3Do5uMHQn0bXWI-aTUKhGNx0hgCVWTQoXIFyoRw/exec" style="font-size:12px">
       <div class="field-label">Terapeuta (opcional)</div>
       <input class="input-field" id="regTherapist" placeholder="Ej. Dra. Martínez">
       <button class="btn btn-primary" onclick="doRegister()" style="margin-top:4px">Registrarme</button>
@@ -550,7 +550,7 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
     <div class="field-label">Peso (kg)</div>
     <input class="input-field" type="number" id="editPeso" placeholder="Ej. 70">
     <div class="field-label">URL Google Sheets</div>
-    <input class="input-field" id="editSheets" placeholder="https://script.google.com/..." style="font-size:12px">
+    <input class="input-field" id="editSheets" placeholder="https://script.google.com/..." value="https://script.google.com/macros/s/AKfycbwU1R2duPOB9EjQwQXPt2zypfKB11J3Do5uMHQn0bXWI-aTUKhGNx0hgCVWTQoXIFyoRw/exec" style="font-size:12px">
     <div class="field-label">Terapeuta</div>
     <input class="input-field" id="editTherapist" placeholder="Ej. Dra. Martínez">
     <div class="field-label">Nueva contraseña (dejar vacío para no cambiar)</div>
@@ -566,7 +566,8 @@ body{background:#0F172A;display:flex;justify-content:center;min-height:100vh}
 var connected=false, pressureThreshold=0.700;
 var sensorInterval=null, gyroInterval=null, saveInterval=null;
 var backP=0, backP2=0, bottomPL=0, bottomPR=0, gyroAngle=0, posturaSentado=true, batteryPct=0, deviceMessage="", postureTimeMin=0, deviceAlert=0, deviceMotor="", devicePatientName="";
-var scriptURL='', selectedDay='', sheetsOk=false;
+var DEFAULT_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwU1R2duPOB9EjQwQXPt2zypfKB11J3Do5uMHQn0bXWI-aTUKhGNx0hgCVWTQoXIFyoRw/exec';
+var scriptURL=DEFAULT_SCRIPT_URL, selectedDay='', sheetsOk=false;
 var connMode='demo', bleDevice=null, bleChar=null, bleRxChar=null, bleService=null;
 var BLE_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 var BLE_TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
@@ -729,7 +730,8 @@ function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 // REAL BACKEND HELPERS: Google Sheets login + JSONP no-CORS
 // ══════════════════════════════════════════════════════
 function getSavedBackendURL(){
-  return localStorage.getItem('tb_backend_url') || localStorage.getItem('lastScriptURL') || '';
+  // URL predeterminada: así cualquier celular/computadora nueva guarda en el mismo Google Sheets.
+  return localStorage.getItem('tb_backend_url') || localStorage.getItem('lastScriptURL') || DEFAULT_SCRIPT_URL;
 }
 
 function setBackendURL(url){
@@ -751,22 +753,24 @@ function getAuthBackendURL(){
     var el=document.getElementById(ids[i]);
     if(el && el.value && el.value.trim()) return el.value.trim();
   }
-  return getSavedBackendURL();
+  return getSavedBackendURL() || DEFAULT_SCRIPT_URL;
 }
 
 function initBackendFields(){
-  var url=getSavedBackendURL();
-  if(!url) return;
+  var url=getSavedBackendURL() || DEFAULT_SCRIPT_URL;
   ['loginSheets','regSheets','scriptURL','editSheets'].forEach(function(id){
     var el=document.getElementById(id);
     if(el && !el.value) el.value=url;
   });
-  scriptURL=url;
+  // If the HTML field already has the default value, use that value as the active backend.
+  var main=document.getElementById('scriptURL');
+  var activeUrl=(main && main.value && main.value.trim()) ? main.value.trim() : url;
+  setBackendURL(activeUrl || DEFAULT_SCRIPT_URL);
 }
 
 function sheetsJSONP(params, customUrl){
   return new Promise(function(resolve,reject){
-    var url=(customUrl||scriptURL||getAuthBackendURL()||'').trim();
+    var url=(customUrl||scriptURL||getAuthBackendURL()||DEFAULT_SCRIPT_URL||'').trim();
     if(!url){reject(new Error('No Apps Script URL'));return;}
 
     var cb='tb_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
@@ -897,7 +901,7 @@ function doRegister(){
   var name=document.getElementById('regName').value.trim();
   var peso=document.getElementById('regPeso').value.trim();
   var pass=document.getElementById('regPass').value;
-  var sheets=document.getElementById('regSheets').value.trim() || getAuthBackendURL();
+  var sheets=document.getElementById('regSheets').value.trim() || getAuthBackendURL() || DEFAULT_SCRIPT_URL;
   var therapist=document.getElementById('regTherapist').value.trim();
   var err=document.getElementById('registerError');
 
@@ -952,7 +956,7 @@ function loginAs(id){
   if(p&&p.sheetsURL) setBackendURL(p.sheetsURL);
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='flex';
-  document.getElementById('scriptURL').value=scriptURL;
+  document.getElementById('scriptURL').value=scriptURL || DEFAULT_SCRIPT_URL;
   pressureThreshold=normalizeThreshold(localStorage.getItem('threshold')||'0.700');
   var buz=document.getElementById('buzzerThresh');
   if(buz) buz.value=pressureThreshold.toFixed(3);
@@ -1485,11 +1489,11 @@ function updateSheetsBadge(state,msg){
   if(state==='ok'){b.className='sheets-badge ok';b.textContent='🗂 Guardando en Google Sheets: Datos ✓';}
   else if(state==='err'){b.className='sheets-badge err';b.textContent='🗂 Sheets: error — '+(msg||'');}
   else if(state==='checking'){b.className='sheets-badge off';b.textContent='🗂 Verificando Sheets...';}
-  else{b.className='sheets-badge off';b.textContent='⚠️ Configura URL de Google Sheets para guardar en Datos';}
+  else{b.className='sheets-badge off';b.textContent=scriptURL?'🗂 URL predeterminada configurada: Google Sheets':'⚠️ Configura URL de Google Sheets para guardar en Datos';}
 }
 
 function testSheetsConnection(){
-  var url=document.getElementById('scriptURL').value.trim() || getAuthBackendURL();
+  var url=document.getElementById('scriptURL').value.trim() || getAuthBackendURL() || DEFAULT_SCRIPT_URL;
   if(!url){showSheetsTestResult('Pega la URL primero',false);return;}
 
   setBackendURL(url);
@@ -1593,9 +1597,9 @@ function toggleBuzzer(){document.getElementById('buzzerSwitch').classList.toggle
 function onThreshInput(){var v=normalizeThreshold(document.getElementById('buzzerThresh').value);pressureThreshold=v;document.getElementById('buzzerThresh').value=v.toFixed(3);}
 function saveSettings(){
   var v=normalizeThreshold(document.getElementById('buzzerThresh').value);
-  var url=document.getElementById('scriptURL').value.trim();
+  var url=document.getElementById('scriptURL').value.trim() || DEFAULT_SCRIPT_URL;
   pressureThreshold=v;
-  scriptURL=url;
+  setBackendURL(url);
   localStorage.setItem('threshold',pressureThreshold.toFixed(3));
   // Guardar sheets URL en el perfil del paciente activo
   if(activePatientId&&url){
@@ -1613,6 +1617,7 @@ function saveSettings(){
 // INIT
 // ══════════════════════════════════════════════════════
 window.onload=function(){
+  initBackendFields();
   activePatientId=localStorage.getItem('activePatientId')||null;
   pressureThreshold=normalizeThreshold(localStorage.getItem('threshold')||'0.700');
   if(activePatientId){
@@ -1631,5 +1636,6 @@ initBackendFields();
 </script>
 </body>
 </html>
+
 
 
