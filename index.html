@@ -1298,27 +1298,21 @@ function updateAngleUI(){
 }
 
 function updateBatteryUI(){
-  var v=document.getElementById('batteryVal');
-  var f=document.getElementById('batteryFill');
+  var v=Math.max(0,Math.min(100,parseFloat(batteryPct)||0));
+  var fill=document.getElementById('batteryFill');
+  var val=document.getElementById('batteryVal');
   var s=document.getElementById('batteryStatus');
-  if(!v||!f||!s) return;
-  if(!connected||batteryPct<=0){
-    v.textContent='---%';
-    v.style.color='#94A3B8';
-    f.style.width='0%';
-    f.style.background='#334155';
-    s.textContent='Sin lectura';
-    s.className='status-ok';
-    return;
+  if(val) val.textContent=Math.round(v)+'%';
+  if(fill){
+    fill.style.width=v+'%';
+    fill.style.background=v<=15?'#EF4444':(v<=35?'#F59E0B':'#10B981');
   }
-  var pct=Math.round(batteryPct);
-  var low=pct<20;
-  v.textContent=pct+'%';
-  v.style.color=low?'#EF4444':'#10B981';
-  f.style.width=pct+'%';
-  f.style.background=low?'#EF4444':'#10B981';
-  s.textContent=low?'⚠ Batería baja':'Batería normal';
-  s.className=low?'status-hi':'status-ok';
+  if(s){
+    if(v<=5){s.textContent='Bateria critica / revisar sensor';s.className='status-hi';}
+    else if(v<=15){s.textContent='Bateria baja';s.className='status-hi';}
+    else if(v<=35){s.textContent='Bateria media-baja';s.className='status-ok';}
+    else{s.textContent='Bateria normal';s.className='status-ok';}
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1345,9 +1339,9 @@ function enviarPeso(){
   if(connMode==='bt'&&bleRxChar){
     // Primero manda el nombre del paciente y luego el peso.
     // El ESP32 debe recibir:
-    // PACIENTE=Nombre
+    // USUARIO=Nombre
     // PESO=10
-    writeBLEText('PACIENTE='+paciente+'\n')
+    writeBLEText('USUARIO='+paciente+'\n')
       .then(function(){return new Promise(function(resolve){setTimeout(resolve,150);});})
       .then(function(){return writeBLEText('PESO='+peso+'\n');})
       .then(function(){alert('✓ Enviado: '+paciente+' / '+peso+' kg');})
@@ -1447,6 +1441,8 @@ function saveToSheets(row){
     action:'write',
     paciente:row.patientName||'Paciente',
     patient:row.patientName||'Paciente',
+    usuario:row.patientName||'Paciente',
+    nombre:row.patientName||'Paciente',
     pesoPaciente:String(row.pesoPaciente||0),
     peso:String(row.pesoPaciente||0),
 
@@ -1547,7 +1543,7 @@ function showSheetsTestResult(msg,ok){var el=document.getElementById('sheetsTest
 function normalizeDateValue(v){if(!v) return todayStr();var s=String(v).trim();if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);var m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m){return m[3]+'-'+pad(parseInt(m[2]))+'-'+pad(parseInt(m[1]));}var d=new Date(s);if(!isNaN(d.getTime())) return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());return todayStr();}
 function normalizeTimeValue(v){if(!v) return '00:00:00';var s=String(v).trim();var m=s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(m) return pad(parseInt(m[1]))+':'+m[2]+':'+(m[3]||'00');var d=new Date(s);if(!isNaN(d.getTime())) return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());return s;}
 function numField(row,names){for(var i=0;i<names.length;i++){if(row[names[i]]!=null && row[names[i]]!=='') return parseFloat(row[names[i]])||0;}return 0;}
-function normalizeSheetRow(row,patientName){var time=normalizeTimeValue(row.time||row.hora||row.Hora||row.hour||row.Timestamp||row.timestamp);var b1=numField(row,['back','espalda','Espalda','B1','b1','espalda1','Espalda1']);var b2=numField(row,['back2','espalda2','Espalda2','B2','b2']);var l=numField(row,['bottomL','left','izquierda','Izquierda','L','asientoIzq','asiento_izq']);var r=numField(row,['bottomR','right','derecha','Derecha','R','asientoDer','asiento_der']);return {time:time,back:b1,back2:b2,bottomL:l,bottomR:r,bottom:(l+r)/2,angulo:numField(row,['angulo','angle','Angulo','Ángulo']),postura:row.postura||'',battery:numField(row,['battery','bateria','Bateria','BAT']),patientName:patientName};}
+function normalizeSheetRow(row,patientName){var time=normalizeTimeValue(row.time||row.hora||row.Hora||row.hour||row.Timestamp||row.timestamp);var b1=numField(row,['back','espalda','Espalda','B1','b1','espalda1','Espalda1']);var b2=numField(row,['back2','espalda2','Espalda2','B2','b2']);var l=numField(row,['bottomL','left','izquierda','Izquierda','L','asientoIzq','asiento_izq']);var r=numField(row,['bottomR','right','derecha','Derecha','R','asientoDer','asiento_der']);var uname=row.usuario||row.Usuario||row.nombre||row.Nombre||patientName;return {time:time,back:b1,back2:b2,bottomL:l,bottomR:r,bottom:(l+r)/2,angulo:numField(row,['angulo','angle','Angulo','Ángulo']),postura:row.postura||'',battery:numField(row,['battery','bateria','Bateria','BAT']),patientName:uname};}
 function fetchAllDays(){
   var localDays=getLocalDays();
   localDays.forEach(function(d){allDaysData[d]=getLocalDay(d);});
@@ -1635,4 +1631,5 @@ initBackendFields();
 </script>
 </body>
 </html>
+
 
